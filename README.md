@@ -1,4 +1,4 @@
-kano-osx-burner
-===============
+kano-burners
+============
 
-SD Card burner for OSX
+SD Card burners for UNIX, Mac OSX, and Windows
