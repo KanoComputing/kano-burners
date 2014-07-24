@@ -48,7 +48,7 @@ def start_burn_process(path, disk, report_progress_ui):
 
 
 def burn_kano_os(path, disk, size, return_queue, report_progress_ui):
-    cmd = 'gzip -dc {}Kanux-Beta-v1.1.0.img.gz | dd of={} bs=4m'.format(path, disk)
+    cmd = 'gzip -dc {}Kanux-Beta-v1.1.0.img.gz | dd of={} bs=4M'.format(path, disk)
     process = subprocess.Popen(cmd, shell=True, stderr=subprocess.PIPE)
     failed = False
 
@@ -62,9 +62,9 @@ def burn_kano_os(path, disk, size, return_queue, report_progress_ui):
             written_bytes = float(parts[0])
             progress = int(written_bytes / size * 100)
 
-            speed = float(parts[6][1:]) / BYTES_IN_MEGABYTE
+            speed = float(parts[7])
 
-            eta = calculate_eta(written_bytes, size, int(parts[6][1:]))
+            eta = calculate_eta(written_bytes, size, speed * BYTES_IN_MEGABYTE)
 
             report_progress_ui(progress, 'speed {0:.2f} MB/s  eta {1:s}  completed {2:d}%'
                                .format(speed, eta, progress))
@@ -86,7 +86,7 @@ def burn_kano_os(path, disk, size, return_queue, report_progress_ui):
 def poll_burning_thread(thread):
     sleep(1)
     debugger('Polling burner for progress..')
-    cmd = 'kill -INFO `pgrep ^dd`'
+    cmd = 'kill -USR1 `pgrep ^dd`'
 
     # as long as the burning thread is running, send SIGINFO
     # to dd to trigger progress output

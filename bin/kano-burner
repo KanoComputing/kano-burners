@@ -1,0 +1,217 @@
+#!/usr/bin/env python
+
+# kano-burner
+#
+# Copyright (C) 2014 Kano Computing Ltd.
+# License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+#
+# [File description]
+
+import sys
+from PyQt4 import QtGui, QtCore
+from src.common.ui import UI
+
+import platform
+from time import sleep
+from src.common.utils import delete_dir, make_dir, is_internet, debugger
+from src.common.errors import INTERNET_ERROR, FREE_SPACE_ERROR, ARCHIVER_ERROR, \
+    NO_DISKS_ERROR
+
+
+REQUIRED_MB = 600  # MB necessary free space
+TEMP_DIR = ''  # set when detecting the platform and updated when a folder is created
+
+
+# Step 1: Detect platform to import appropriate modules
+if platform.system() == 'Darwin':
+    debugger('Mac OS detected')
+    from src.osx.download import download_kano_os
+    from src.osx.burn import start_burn_process
+    from src.osx.disk import get_disks_list, unmount_disk, eject_disk, format_disk
+    from src.osx.dependency import is_gzip_installed, is_sufficient_space
+    TEMP_DIR = '/tmp/kano-burner/'
+
+elif platform.system() == 'Linux':
+    debugger('Linux OS detected')
+    from src.linux.download import download_kano_os
+    from src.linux.burn import start_burn_process
+    from src.linux.disk import get_disks_list, unmount_disk, eject_disk, format_disk
+    from src.linux.dependency import is_gzip_installed, is_sufficient_space
+    TEMP_DIR = '/tmp/kano-burner/'
+
+elif platform.system() == 'Windows':
+    debugger('Windows OS detected')
+    #import src.windows.download
+    #import src.windows.burn
+    #import src.windows.dependency
+    TEMP_DIR = 'C:\\temp\\kano-burner\\'  # ??
+
+
+class BurnerGUI(UI):
+
+    def __init__(self):
+        super(BurnerGUI, self).__init__()
+
+    def onStart(self):
+        # Step 1: make temp directory
+        debugger('Making temp directory')
+        make_dir(TEMP_DIR)
+
+        debugger('Checking for dependencies..')
+
+        # Step 2: check root
+        #debugger('Making sure program was ran with sudo')
+        #enforce_root("You need to run this program as root.")
+
+        # Step 3: check for internet
+        if is_internet():
+            debugger('Internet connection detected')
+        else:
+            debugger('No internet connection detected')
+            self.setError(INTERNET_ERROR)
+
+        # Step 4: look for archiver tools
+        if is_gzip_installed():
+            debugger('Gzip is installed')
+        else:
+            debugger('Gzip is not installed')
+            self.setError(ARCHIVER_ERROR)
+
+        # Step 5: check for available space
+        if is_sufficient_space(TEMP_DIR, REQUIRED_MB):
+            debugger('Sufficient available space')
+        else:
+            debugger('Insufficient available space (min 600 MB)')
+            self.setError(FREE_SPACE_ERROR)
+
+    def onComboBoxClick(self):
+        self.disksComboBox.clear()
+
+        # Step 6: list drives
+        debugger('Scanning drives..')
+        self.disks = get_disks_list()
+        if not self.disks:
+            self.setError(NO_DISKS_ERROR)
+
+        for disk in self.disks:
+            self.disksComboBox.addItem('{}, size {}'.format(disk['name'], disk['size']))
+
+    def onStartClick(self):
+        # switch screen to progressScreen and grab the disk id e.g. /dev/disk1
+        self.showScreen(self.progressScreen)
+        selected_disk = self.disks[self.disksComboBox.currentIndex()]['id']
+
+        # Step 7: prepare backend
+        # thread to download and burn the image
+        backendThread = BurnerBackendThread(selected_disk)
+
+        # connecting Qt singals to methods on the UI
+        # so that the backend can report its progress
+        backendThread.notifyProgress.connect(self.setProgress)
+        backendThread.notifyStage.connect(self.setStatusTitle)
+        backendThread.notifyDescription.connect(self.setStatusDescription)
+        backendThread.notifyFinish.connect(self.onBackendFinish)
+
+        # start the thread and wait for it to finish
+        backendThread.start()
+        sleep(1)  # very odd fix
+
+    def onBackendFinish(self, error):
+        if error:
+            self.setError(error)
+        else:
+            self.showScreen(self.finishScreen)
+
+    def onRetryClick(self):
+        self.disksComboBox.restore()
+        self.progressBar.reset()
+        self.showScreen(self.introScreen)
+        self.onStart()
+
+    def onFinishClick(self):
+        self.close()
+
+    def onFinish(self):
+        # Step 15: remove temp files
+        debugger('Removing temp files')
+        delete_dir(TEMP_DIR)
+
+
+class BurnerBackendThread(QtCore.QThread):
+
+    # signals must be defined here and not in init
+    # they are used by the backend to communicate with the UI and update things
+    notifyProgress = QtCore.pyqtSignal(int)
+    notifyStage = QtCore.pyqtSignal(str)
+    notifyDescription = QtCore.pyqtSignal(str)
+    notifyFinish = QtCore.pyqtSignal(dict)
+
+    def __init__(self, disk, parent=None):
+        super(BurnerBackendThread, self).__init__(parent)
+        self.selected_disk = disk
+
+    def showStage(self, text):
+        self.notifyStage.emit(text)
+
+    def showProgress(self, progress, text):
+        self.notifyProgress.emit(progress)
+        self.notifyDescription.emit(text)
+
+    def showFinish(self, error):
+        self.notifyFinish.emit(error)
+
+    def run(self):
+        global TEMP_DIR
+
+        # Step 8: download the latest Kano OS image
+        debugger('Downloading Kano OS..')
+        self.showStage('Downloading Kano OS..')
+        successful, error = download_kano_os(TEMP_DIR, self.showProgress)
+        if not successful:
+            self.showFinish(error)
+            debugger('Removing temp files')
+            delete_dir(TEMP_DIR)
+            return
+
+        # Step 9: unmount SD card
+        debugger('Unmounting disk {}..'.format(self.selected_disk))
+        self.showStage('Unmounting disk..')
+        unmount_disk(self.selected_disk)
+
+        # Step 10: clean SD card
+        debugger('Formatting disk {}..'.format(self.selected_disk))
+        self.showStage('Formatting disk..')
+        format_disk(self.selected_disk)
+
+        # Step 11: unmount SD card
+        debugger('Unmounting disk {}..'.format(self.selected_disk))
+        self.showStage('Unmounting disk..')
+        unmount_disk(self.selected_disk)
+
+        # Step 12: burn image
+        debugger('Burning image to SD card on ' + self.selected_disk)
+        self.showStage('Burning Kano OS..')
+        successful, error = start_burn_process(TEMP_DIR, self.selected_disk, self.showProgress)
+        if not successful:
+            self.showFinish(error)
+            return
+
+        # Step 13: eject disk
+        debugger('Ejecting disk..')
+        self.showStage('Waiting for things to settle..')
+        sleep(5)  # wait for dd to mount the disk back
+        eject_disk(self.selected_disk)
+
+        # Step 14: success messsage and notify UI of finish with no error
+        self.showStage("Kano OS has successfully been burned. Let's go!")
+        self.notifyFinish.emit(dict())
+
+
+def main():
+    app = QtGui.QApplication(sys.argv)
+    burnerUI = BurnerGUI()
+    sys.exit(app.exec_())
+
+
+if __name__ == '__main__':
+    main()
