@@ -98,10 +98,12 @@ class BurnerGUI(UI):
             self.disksComboBox.addItem('{}, size {}'.format(disk['name'], disk['size']))
 
     def onStartClick(self):
+        # check if the user has selected a disk, otherwise show an error
+        selected_disk = None
         try:
             selected_disk = self.disks[self.disksComboBox.currentIndex()]['id']
         except:
-            self.setError(NO_DISK_SELECTED)
+            return self.setError(NO_DISK_SELECTED)
 
         # switch screen to progressScreen and grab the disk id e.g. /dev/disk1
         self.showScreen(self.progressScreen)
