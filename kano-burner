@@ -7,15 +7,16 @@
 #
 # [File description]
 
+
 import sys
+import time
+import platform
+
 from PyQt4 import QtGui, QtCore
 from src.common.ui import UI
-
-import platform
-from time import sleep
 from src.common.utils import delete_dir, make_dir, is_internet, debugger
 from src.common.errors import INTERNET_ERROR, FREE_SPACE_ERROR, ARCHIVER_ERROR, \
-    NO_DISKS_ERROR
+    NO_DISKS_ERROR, NO_DISK_SELECTED
 
 
 REQUIRED_MB = 600  # MB necessary free space
@@ -97,9 +98,13 @@ class BurnerGUI(UI):
             self.disksComboBox.addItem('{}, size {}'.format(disk['name'], disk['size']))
 
     def onStartClick(self):
+        try:
+            selected_disk = self.disks[self.disksComboBox.currentIndex()]['id']
+        except:
+            self.setError(NO_DISK_SELECTED)
+
         # switch screen to progressScreen and grab the disk id e.g. /dev/disk1
         self.showScreen(self.progressScreen)
-        selected_disk = self.disks[self.disksComboBox.currentIndex()]['id']
 
         # Step 7: prepare backend
         # thread to download and burn the image
@@ -114,7 +119,7 @@ class BurnerGUI(UI):
 
         # start the thread and wait for it to finish
         backendThread.start()
-        sleep(1)  # very odd fix
+        time.sleep(1)  # very odd fix
 
     def onBackendFinish(self, error):
         if error:
@@ -199,7 +204,7 @@ class BurnerBackendThread(QtCore.QThread):
         # Step 13: eject disk
         debugger('Ejecting disk..')
         self.showStage('Waiting for things to settle..')
-        sleep(5)  # wait for dd to mount the disk back
+        time.sleep(5)  # wait for dd to mount the disk back
         eject_disk(self.selected_disk)
 
         # Step 14: success messsage and notify UI of finish with no error
