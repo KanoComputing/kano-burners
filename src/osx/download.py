@@ -54,7 +54,7 @@ def download_kano_os(path, report_progress_ui):
     except:
         pass
 
-    # the downloader is running on separate threads so here we wait for the
+    # the downloader is running separate threads so here we wait for the
     # process to finish and call the UI function which reports the process
     # when the application is closed, we need to specifically kill it and check that status
     while not downloader.isFinished():
@@ -84,7 +84,7 @@ def download_kano_os(path, report_progress_ui):
 def download_md5(url, path):
     # again, making sure we catch any exceptions pySmartDL may throw
     try:
-        downloader = SmartDL(url, dest=path, progress_bar=False)
+        downloader = Downloader(url, dest=path, progress_bar=False)
         downloader.start(blocking=True)
     except:
         debugger('[ERROR] could not start md5 download')
