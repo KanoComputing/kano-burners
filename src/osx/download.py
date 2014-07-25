@@ -24,7 +24,7 @@ GZIP_OS_URL = 'http://dev.kano.me/public/Kanux-Beta-v1.1.0.img.gz'
 GZIP_MD5_URL = 'http://dev.kano.me/public/Kanux-Beta-v1.1.0.img.gz.md5'
 
 
-class Downloader(SmartDL, object):
+class Downloader(SmartDL):
 
     def __init__(self, *args, **kwargs):
         SmartDL.__init__(self, *args, **kwargs)
@@ -37,19 +37,20 @@ class Downloader(SmartDL, object):
     # @Override
     def isFinished(self):
         # the default method now needs to also report whether it was killed or not
-        return self._killed and SmartDL.isFinished(self)
+        return not self._killed and SmartDL.isFinished(self)
 
 
 def download_kano_os(path, report_progress_ui):
     # simply make sure the file was not corrupted - not for cryptographic security
     downloaded_md5 = download_md5(GZIP_MD5_URL, path)
 
+    #downloader = SmartDL(TEST2_URL, dest=path, progress_bar=False)
+    downloader = Downloader(GZIP_OS_URL, dest=path, progress_bar=False)
+    downloader.add_hash_verification('md5', downloaded_md5)
+
     # the documentation is misleading - if non blocking mode is used,
     # exceptions can still be thrown
     try:
-        #downloader = SmartDL(TEST2_URL, dest=path, progress_bar=False)
-        downloader = Downloader(GZIP_OS_URL, dest=path, progress_bar=False)
-        downloader.add_hash_verification('md5', downloaded_md5)
         downloader.start(blocking=False)
     except:
         pass
@@ -82,9 +83,10 @@ def download_kano_os(path, report_progress_ui):
 
 
 def download_md5(url, path):
+    downloader = Downloader(url, dest=path, progress_bar=False)
+
     # again, making sure we catch any exceptions pySmartDL may throw
     try:
-        downloader = Downloader(url, dest=path, progress_bar=False)
         downloader.start(blocking=True)
     except:
         debugger('[ERROR] could not start md5 download')
