@@ -44,8 +44,8 @@ def download_kano_os(path, report_progress_ui):
     # simply make sure the file was not corrupted - not for cryptographic security
     downloaded_md5 = download_md5(GZIP_MD5_URL, path)
 
-    downloader = SmartDL(TEST2_URL, dest=path, progress_bar=False)
-    #downloader = Downloader(GZIP_OS_URL, dest=path, progress_bar=False)
+    #downloader = SmartDL(TEST2_URL, dest=path, progress_bar=False)
+    downloader = Downloader(GZIP_OS_URL, dest=path, progress_bar=False)
     downloader.add_hash_verification('md5', downloaded_md5)
 
     # the documentation is misleading - if non blocking mode is used,
