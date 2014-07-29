@@ -16,7 +16,7 @@ from PyQt4 import QtGui, QtCore
 from src.common.ui import UI
 from src.common.utils import delete_dir, make_dir, is_internet, debugger
 from src.common.errors import INTERNET_ERROR, FREE_SPACE_ERROR, ARCHIVER_ERROR, \
-    NO_DISKS_ERROR, NO_DISK_SELECTED
+    NO_DISKS_ERROR
 
 
 REQUIRED_MB = 600  # MB necessary free space
@@ -87,6 +87,7 @@ class BurnerGUI(UI):
 
     def onComboBoxClick(self):
         self.disksComboBox.clear()
+        self.startButton.setEnabled(True)
 
         # Step 6: list drives
         debugger('Scanning drives..')
@@ -99,11 +100,7 @@ class BurnerGUI(UI):
 
     def onStartClick(self):
         # check if the user has selected a disk, otherwise show an error
-        selected_disk = None
-        try:
-            selected_disk = self.disks[self.disksComboBox.currentIndex()]['id']
-        except:
-            return self.showError(NO_DISK_SELECTED)
+        selected_disk = self.disks[self.disksComboBox.currentIndex()]['id']
 
         # switch screen to progressScreen and grab the disk id e.g. /dev/disk1
         self.showScreen(self.progressScreen)
@@ -132,6 +129,7 @@ class BurnerGUI(UI):
     def onRetryClick(self):
         self.disksComboBox.restore()
         self.progressBar.reset()
+        self.startButton.setEnabled(False)
         self.showScreen(self.introScreen)
         self.onStart()
 

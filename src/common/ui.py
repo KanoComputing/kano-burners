@@ -81,6 +81,7 @@ class UI(QtGui.QWidget):
 
         self.disksComboBox = container.addComboBox(self.onComboBoxClick, defaultItem='Select device')
         self.startButton = container.addButton("BURN!", self.onStartClick)
+        self.startButton.setEnabled(False)
         return container
 
     def createProgressScreen(self, x, y):

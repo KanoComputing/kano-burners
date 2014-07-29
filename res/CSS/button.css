@@ -28,3 +28,9 @@ QPushButton:hover {
 QPushButton:pressed {
     background-color: #eeeeee;
 }
+
+/* Styling for when the button is disabled */
+QPushButton:disabled {
+    background-color: #dddddd;
+    color: white;
+}

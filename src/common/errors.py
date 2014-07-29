@@ -23,10 +23,6 @@ NO_DISKS_ERROR = {
     'title': 'SD Card not found..',
     'description': 'Make sure you have inserted the SD card correctly'
 }
-NO_DISK_SELECTED = {
-    'title': 'No disk selected..',
-    'description': 'Ops! Make sure you select which disk you would like to burn to!'
-}
 DOWNLOAD_ERROR = {
     'title': 'There was an error downloading Kano OS..',
     'description': 'Please check your internet connection or try again later'
