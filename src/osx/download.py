@@ -34,13 +34,18 @@ class Downloader(SmartDL):
         import atexit
         atexit.register(self.stop)
 
+    # @Override
+    def isFinished(self):
+        # the default method now needs to also report whether it was killed or not
+        return not self._killed and SmartDL.isFinished(self)
+
 
 def download_kano_os(path, report_progress_ui):
     # simply make sure the file was not corrupted - not for cryptographic security
     downloaded_md5 = download_md5(GZIP_MD5_URL, path)
 
-    #downloader = SmartDL(TEST2_URL, dest=path, progress_bar=False)
-    downloader = Downloader(GZIP_OS_URL, dest=path, progress_bar=False)
+    downloader = SmartDL(TEST2_URL, dest=path, progress_bar=False)
+    #downloader = Downloader(GZIP_OS_URL, dest=path, progress_bar=False)
     downloader.add_hash_verification('md5', downloaded_md5)
 
     # the documentation is misleading - if non blocking mode is used,
@@ -52,8 +57,7 @@ def download_kano_os(path, report_progress_ui):
 
     # the downloader is running separate threads so here we wait for the
     # process to finish and call the UI function which reports the process
-    # when the application is closed, we need to specifically kill it and check that status
-    while not downloader.isFinished() and not downloader._killed:
+    while not downloader.isFinished():
         report_progress_ui(downloader.get_progress() * 100, 'speed {}  eta {}  completed {}%'
                            .format(downloader.get_speed(human=True),
                                    downloader.get_eta(human=True),
