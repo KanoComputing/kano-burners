@@ -1,0 +1,42 @@
+/*
+# label.css
+#
+# Copyright (C) 2014 Kano Computing Ltd.
+# License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+#
+# [File description]
+*/
+
+
+/* Styling for all QLabel instances, including subclasses */
+QLabel {
+    min-width: 400px;
+    min-height: 25px;
+
+    qproperty-alignment: AlignCenter;
+    font-family: Bariol;
+}
+
+/* Styling specifically for QLables with objectName='title' */
+QLabel#title {
+    font-weight: bold;
+    font-size: 15px;
+    color: #ffffff;
+}
+
+/* Styling specifically for QLables with objectName='description' */
+QLabel#description {
+    font-size : 13px;
+    color : #ffe3cf;
+}
+
+/* Styling specifically for QLables with objectName='footer' */
+QLabel#footer {
+    font-size: 15px;
+    color: #ffe3cf;
+}
+
+/* Styling specifically for QLables with objectName='footer' when mouse is over them */
+QLabel#footer:hover {
+    color: white;
+}

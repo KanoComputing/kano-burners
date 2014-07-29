@@ -69,21 +69,21 @@ class BurnerGUI(UI):
             debugger('Internet connection detected')
         else:
             debugger('No internet connection detected')
-            self.setError(INTERNET_ERROR)
+            self.showError(INTERNET_ERROR)
 
         # Step 4: look for archiver tools
         if is_gzip_installed():
             debugger('Gzip is installed')
         else:
             debugger('Gzip is not installed')
-            self.setError(ARCHIVER_ERROR)
+            self.showError(ARCHIVER_ERROR)
 
         # Step 5: check for available space
         if is_sufficient_space(TEMP_DIR, REQUIRED_MB):
             debugger('Sufficient available space')
         else:
             debugger('Insufficient available space (min 600 MB)')
-            self.setError(FREE_SPACE_ERROR)
+            self.showError(FREE_SPACE_ERROR)
 
     def onComboBoxClick(self):
         self.disksComboBox.clear()
@@ -92,7 +92,7 @@ class BurnerGUI(UI):
         debugger('Scanning drives..')
         self.disks = get_disks_list()
         if not self.disks:
-            self.setError(NO_DISKS_ERROR)
+            self.showError(NO_DISKS_ERROR)
 
         for disk in self.disks:
             self.disksComboBox.addItem('{}, size {}'.format(disk['name'], disk['size']))
@@ -103,7 +103,7 @@ class BurnerGUI(UI):
         try:
             selected_disk = self.disks[self.disksComboBox.currentIndex()]['id']
         except:
-            return self.setError(NO_DISK_SELECTED)
+            return self.showError(NO_DISK_SELECTED)
 
         # switch screen to progressScreen and grab the disk id e.g. /dev/disk1
         self.showScreen(self.progressScreen)
@@ -125,7 +125,7 @@ class BurnerGUI(UI):
 
     def onBackendFinish(self, error):
         if error:
-            self.setError(error)
+            self.showError(error)
         else:
             self.showScreen(self.finishScreen)
 

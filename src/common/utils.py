@@ -12,6 +12,12 @@ import subprocess
 import signal
 import shutil
 from urllib2 import urlopen
+from PyQt4 import QtCore
+
+
+res_path = "res/"
+images_path = res_path + "images/"
+css_path = res_path + "CSS/"
 
 
 BYTES_IN_MEGABYTE = 1048576     # conversion constants
@@ -71,3 +77,13 @@ def is_internet():
         except:
             pass
     return False
+
+
+# This method is used to set CSS styling
+# for a given widget from a given CSS file
+def load_css_for_widget(widget, css_path):
+    css = QtCore.QFile(css_path)
+    css.open(QtCore.QIODevice.ReadOnly)
+    if css.isOpen():
+        widget.setStyleSheet(QtCore.QVariant(css.readAll()).toString())
+    css.close()

@@ -7,27 +7,20 @@
 # [File description]
 
 
-from PyQt4 import QtCore, QtGui
-from src.common.widgets import ImageHoverButton, MultistageProgressBar, ComboBox
+from PyQt4 import QtGui
+from src.common.widgets import VerticalContainer
+from src.common.utils import load_css_for_widget, images_path, css_path
 
 
 APP_WIDTH = 500
 APP_HEIGHT = 330
 CONTAINER_HEIGHT = 140
 
-PROGRESS_BAR_WIDTH = 350
-PROGRESS_BAR_HEIGHT = 30
-
-LABEL_WIDTH = 460
-LABEL_HEIGHT = 25
-
-COMBO_BOX_WIDTH = 300
-COMBO_BOX_HEIGHT = 30
-
-CSS_TEXT_BOLD = "{font-family : Bariol; font-style : bold; font-size : 15px; color : #FFFFFF;}"
-CSS_TEXT = "{font-family : Bariol; font-size : 13px; color : #FFE3CF;}"
-
-res_path = "res/images/"
+# These are used as object names for labels within the application
+# and are used to differentiate between CSS styles - see res/CSS/label.css
+LABEL_CSS_TITLE = 'title'
+LABEL_CSS_DESCRIPTION = 'description'
+LABEL_CSS_FOOTER = 'footer'
 
 
 class UI(QtGui.QWidget):
@@ -54,25 +47,28 @@ class UI(QtGui.QWidget):
         self.onFinish()
 
     def center(self):
-        # centers the window on the screen
+        # centers the application on the screen
         window = self.frameGeometry()
         screen_center = QtGui.QDesktopWidget().availableGeometry().center()
         window.moveCenter(screen_center)
         self.move(window.topLeft())
 
     def setTheme(self):
+        # the application window only has a vertical container which contains
+        # exactly 3 items: a header image, a spacer for the active screen, and a footer
+        self.container = VerticalContainer(self)
+        self.container.setGeometry(0, 0, APP_WIDTH, APP_HEIGHT)
+
         # changing the background color of the main window
         palette = self.palette()
         palette.setColor(self.backgroundRole(), QtGui.QColor(255, 132, 42))  # FF842A
         self.setPalette(palette)
 
-        header = QtGui.QLabel(self)
-        header.move(44, 35)
-        header.setPixmap(QtGui.QPixmap(res_path + 'header.png'))
-
-        footer = QtGui.QLabel(self)
-        footer.move(163, 275)
-        footer.setPixmap(QtGui.QPixmap(res_path + 'footer.png'))
+        # adding the 3 items to the application container
+        self.container.addImage(images_path + "header.png")
+        self.container.addSpacer(CONTAINER_HEIGHT)
+        footer = self.container.addLabel("Questions? help@kano.me", objectName=LABEL_CSS_FOOTER)
+        load_css_for_widget(footer, css_path + "label.css")
 
     def createScreens(self):
         self.introScreen = self.createIntroScreen(0, 120)
@@ -83,34 +79,34 @@ class UI(QtGui.QWidget):
     def createIntroScreen(self, x, y):
         container = self.createContainer(x, y)
 
-        self.disksComboBox = container.addComboBox(COMBO_BOX_WIDTH, COMBO_BOX_HEIGHT, self.onComboBoxClick, 'Select device')
-        self.startButton = container.addImageButton(self.onStartClick, res_path + 'burn.png')
+        self.disksComboBox = container.addComboBox(self.onComboBoxClick, defaultItem='Select device')
+        self.startButton = container.addButton("BURN!", self.onStartClick)
         return container
 
     def createProgressScreen(self, x, y):
         container = self.createContainer(x, y)
 
-        self.statusTitleLabel = container.addLabel(LABEL_WIDTH, LABEL_HEIGHT, 'Status title', CSS_TEXT_BOLD)
-        self.statusDescriptionLabel = container.addLabel(LABEL_WIDTH, LABEL_HEIGHT, 'Status description', CSS_TEXT)
+        self.statusTitleLabel = container.addLabel("Status title", LABEL_CSS_TITLE)
+        self.statusDescriptionLabel = container.addLabel("Status description", LABEL_CSS_DESCRIPTION)
         container.addSpacer(5)
-        self.progressBar = container.addProgressBar(PROGRESS_BAR_WIDTH, PROGRESS_BAR_HEIGHT, 2)
+        self.progressBar = container.addProgressBar(stages=2)
         container.addSpacer(20)
         return container
 
     def createFinishScreen(self, x, y):
         container = self.createContainer(x, y)
 
-        self.finishLabel = container.addLabel(LABEL_WIDTH, LABEL_HEIGHT, "Kano OS has successfully been burned. Let's go!", CSS_TEXT_BOLD)
-        self.FinishButton = container.addImageButton(self.onFinishClick, res_path + 'finish.png')
+        self.finishLabel = container.addLabel("Kano OS has successfully been burned. Let's go!", LABEL_CSS_TITLE)
+        self.FinishButton = container.addButton("FINISH", self.onFinishClick)
         return container
 
     def createErrorScreen(self, x, y):
         container = self.createContainer(x, y)
 
-        self.errorTitleLabel = container.addLabel(LABEL_WIDTH, LABEL_HEIGHT, 'Error title', CSS_TEXT_BOLD)
-        self.errorDescriptionLabel = container.addLabel(LABEL_WIDTH, LABEL_HEIGHT, 'Error description', CSS_TEXT)
+        self.errorTitleLabel = container.addLabel('Error title', LABEL_CSS_TITLE)
+        self.errorDescriptionLabel = container.addLabel('Error description', LABEL_CSS_DESCRIPTION)
         container.addSpacer(20)
-        self.FinishButton = container.addImageButton(self.onRetryClick, res_path + 'retry.png')
+        self.FinishButton = container.addButton("TRY AGAIN", self.onRetryClick)
         return container
 
     def createContainer(self, x, y):
@@ -126,8 +122,12 @@ class UI(QtGui.QWidget):
         self.errorScreen.hide()
         screen.show()
 
+    def showError(self, error):
+        self.errorTitleLabel.setText(error['title'])
+        self.errorDescriptionLabel.setText(error['description'])
+        self.showScreen(self.errorScreen)
+
     def setProgress(self, progress):
-        self.progressBar.processes
         self.progressBar.setValue(progress)
 
     def setStatusTitle(self, text):
@@ -135,11 +135,6 @@ class UI(QtGui.QWidget):
 
     def setStatusDescription(self, text):
         self.statusDescriptionLabel.setText(text)
-
-    def setError(self, error):
-        self.errorTitleLabel.setText(error['title'])
-        self.errorDescriptionLabel.setText(error['description'])
-        self.showScreen(self.errorScreen)
 
     def setComboBox(self, item_list):
         self.disksComboBox.removeItem('Device')
@@ -163,61 +158,3 @@ class UI(QtGui.QWidget):
 
     def onComboBoxClick(self):
         pass
-
-
-class VerticalContainer(QtGui.QWidget):
-
-    def __init__(self, parent):
-        super(VerticalContainer, self).__init__(parent)
-        self.widgets = list()
-
-    def addImageButton(self, onClick, imagePath):
-        button = ImageHoverButton(self, imagePath)
-        button.clicked.connect(onClick)
-        self.widgets.append(button)
-        return button
-
-    def addProgressBar(self, width, height, processes=1, styling=''):
-        progress_bar = MultistageProgressBar(self, processes)
-        progress_bar.resize(width, height)
-        progress_bar.setStyleSheet('QProgressBar ' + styling)
-        self.widgets.append(progress_bar)
-        return progress_bar
-
-    def addLabel(self, width, height, text, styling=''):
-        label = QtGui.QLabel(text, self)
-        label.resize(width, height)
-        label.setAlignment(QtCore.Qt.AlignCenter)
-        label.setStyleSheet('QLabel ' + styling)
-        self.widgets.append(label)
-        return label
-
-    def addComboBox(self, width, height, onClick, defaultItem=None):
-        combo_box = ComboBox(self, defaultItem)
-        combo_box.resize(width, height)
-        combo_box.opened.connect(onClick)
-        self.widgets.append(combo_box)
-        return combo_box
-
-    def addSpacer(self, height):
-        spacer = QtGui.QWidget(self)
-        spacer.resize(self.width(), height)
-        self.widgets.append(spacer)
-
-    # @Override
-    # This method is called automatically when the widget is displayed with show()
-    # It centers all vertically added widgets in this container horizontally
-    def showEvent(self, event):
-        widget_cummulated_height = 0
-        for widget in self.widgets:
-            widget_cummulated_height += widget.height()
-
-        # calculate an equal spacing between the widgets
-        spacing = (self.height() - widget_cummulated_height) / (len(self.widgets) + 1)
-        current_height = 0
-
-        # add the widgets centrally in X and equally distanced in Y
-        for widget in self.widgets:
-            current_height += spacing
-            widget.move((self.width() - widget.width()) / 2, current_height)
-            current_height += widget.height()

@@ -1,0 +1,30 @@
+/*
+# button.css
+#
+# Copyright (C) 2014 Kano Computing Ltd.
+# License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+#
+# [File description]
+*/
+
+
+/* Styling for all QButton instances, including subclasses */
+QPushButton {
+    width: 110px;
+    height: 44px;
+    border-radius: 3px;  /* rounded corners */
+
+    background-color: white;
+    font-weight: bold;
+    color: #444444;
+}
+
+/* Styling for when the mouse is over the button */
+QPushButton:hover {
+    background-color: #e6e6e6;
+}
+
+/* Styling for when the button is pressed */
+QPushButton:pressed {
+    background-color: #eeeeee;
+}

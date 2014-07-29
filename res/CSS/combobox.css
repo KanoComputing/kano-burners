@@ -1,0 +1,33 @@
+/*
+# combobox.css
+#
+# Copyright (C) 2014 Kano Computing Ltd.
+# License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+#
+# [File description]
+*/
+
+
+/* Styling for all QComboBox instances, including subclasses */
+QComboBox {
+    min-width: 150px;
+    height: 44px;
+    border-radius: 3px;
+
+    font: bold 12px Bariol;
+    color: #444444;
+}
+
+/* Styling for the dropdown button */
+QComboBox::drop-down {
+    min-width: 44px;
+    border: 0px;
+
+    image: url("res/images/arrow.png");
+}
+
+/* Styling of the popup menu */
+QComboBox QAbstractItemView {
+    min-width: 310px;
+    background-color: white;
+}

@@ -8,34 +8,15 @@
 
 
 from PyQt4 import QtCore, QtGui
+from src.common.utils import load_css_for_widget, css_path
 
-
-class ImageHoverButton(QtGui.QLabel):
-
-    # this signal is sent when the user clicks and releases whilst still inside the widget
-    clicked = QtCore.pyqtSignal()
-
-    def __init__(self, parent, imagePath):
-        QtGui.QLabel.__init__(self, parent)
-        self.setPixmap(QtGui.QPixmap(imagePath))
-
-    # @Override
-    def mouseReleaseEvent(self, event):
-        self.clicked.emit()
-    '''
-    # @Override
-    def enterEvent(self, event):
-        print 'enter'
-
-    # @Override
-    def leaveEvent(self, event):
-        print 'leave'
-    '''
 
 class ComboBox(QtGui.QComboBox):
 
-    # this signal is sent when the user clicks the widget and the popup list is shown
+    # these signals are emitted when the user clicks the
+    # widget and the popup list is shown or closed
     opened = QtCore.pyqtSignal()
+    resized = QtCore.pyqtSignal()
 
     def __init__(self, parent, defaultItem=None):
         QtGui.QComboBox.__init__(self, parent)
@@ -50,6 +31,11 @@ class ComboBox(QtGui.QComboBox):
             self.addItem(self.defaultItem)
 
     # @Override
+    def resizeEvent(self, event):
+        self.resized.emit()
+        return super(ComboBox, self).resizeEvent(event)
+
+    # @Override
     def mousePressEvent(self, event):
         self.opened.emit()
         return super(ComboBox, self).mousePressEvent(event)
@@ -57,27 +43,99 @@ class ComboBox(QtGui.QComboBox):
 
 class MultistageProgressBar(QtGui.QProgressBar):
 
-    def __init__(self, parent, processes=1):
+    def __init__(self, parent, stages=1):
         QtGui.QProgressBar.__init__(self, parent)
 
-        self.processes = processes
-        self.processes_done = 0
-        self.current_process_progress = 0
+        self.stages = stages
+        self.stages_completed = 0
+        self.current_stage_progress = 0
 
     # @Override
     def reset(self):
-        self.processes_done = 0
-        self.current_process_progress = 0
+        self.stages_completed = 0
+        self.current_stage_progress = 0
         return super(MultistageProgressBar, self).reset()
 
     # @Override
     def setValue(self, progress):
-        # check if a new process is reporting its progress
-        if self.current_process_progress > progress:
-            self.processes_done += 1
+        # a simplistic approach to check if a new process is reporting its progress
+        # NOTE: it assumes that the current process is near completion
+        #       if the current process is too fast, adjust this value
+        if self.current_stage_progress > progress and self.current_stage_progress > 98:
+            self.stages_completed += 1
 
         # calculate the overall progress
-        self.current_process_progress = progress
-        overall_progress = (1.0 / self.processes) * (progress + 100.0 * self.processes_done)
+        self.current_stage_progress = progress
+        overall_progress = (1.0 / self.stages) * (progress + 100.0 * self.stages_completed)
 
         return super(MultistageProgressBar, self).setValue(overall_progress)
+
+
+class VerticalContainer(QtGui.QWidget):
+    # TODO: include addVerticalContainer() - to be used by UI instead of a spacer
+
+    def __init__(self, parent):
+        super(VerticalContainer, self).__init__(parent)
+        self.widgets = list()
+
+    def addButton(self, text, onClick):
+        button = QtGui.QPushButton(text, self)
+        button.clicked.connect(onClick)
+        load_css_for_widget(button, css_path + "button.css")
+        self.widgets.append(button)
+        return button
+
+    def addProgressBar(self, stages=1):
+        progressBar = MultistageProgressBar(self, stages)
+        progressBar.setTextVisible(False)
+        load_css_for_widget(progressBar, css_path + "progressbar.css")
+        self.widgets.append(progressBar)
+        return progressBar
+
+    def addLabel(self, text, objectName=""):
+        label = QtGui.QLabel(text, self)
+        label.setObjectName(objectName)
+        load_css_for_widget(label, css_path + "label.css")
+        self.widgets.append(label)
+        return label
+
+    def addImage(self, imagePath):
+        image = QtGui.QLabel(self)
+        image.setPixmap(QtGui.QPixmap(imagePath))
+        self.widgets.append(image)
+        return image
+
+    def addComboBox(self, onClick, defaultItem=None):
+        comboBox = ComboBox(self, defaultItem)
+        comboBox.opened.connect(onClick)
+        comboBox.resized.connect(self.centerWidgets)
+        comboBox.setSizeAdjustPolicy(QtGui.QComboBox.AdjustToContents)
+        load_css_for_widget(comboBox, css_path + "combobox.css")
+        self.widgets.append(comboBox)
+        return comboBox
+
+    def addSpacer(self, height):
+        spacer = QtGui.QWidget(self)
+        spacer.resize(self.width(), height)
+        self.widgets.append(spacer)
+
+    # It centers all vertically added widgets, in this container, horizontally
+    def centerWidgets(self):
+        widget_cummulated_height = 0
+        for widget in self.widgets:
+            widget_cummulated_height += widget.height()
+
+        # calculate an equal spacing between the widgets
+        spacing = (self.height() - widget_cummulated_height) / (len(self.widgets) + 1)
+        current_height = 0
+
+        # add the widgets centrally in X and equally distanced in Y
+        for widget in self.widgets:
+            current_height += spacing
+            widget.move((self.width() - widget.width()) / 2, current_height)
+            current_height += widget.height()
+
+    # @Override
+    # This method is called automatically when the widget is displayed with show()
+    def showEvent(self, event):
+        self.centerWidgets()

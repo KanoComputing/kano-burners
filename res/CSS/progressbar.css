@@ -1,0 +1,24 @@
+/*
+# progressbar.css
+#
+# Copyright (C) 2014 Kano Computing Ltd.
+# License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+#
+# [File description]
+*/
+
+
+/* Styling for all QProgressBar instances, including subclasses */
+QProgressBar {
+    width: 350px;
+    height: 14px;
+    border-radius: 7px;
+
+    background-color: white;
+}
+
+/* Styling for the progress filling */
+QProgressBar::chunk {
+    border-radius: 7px;
+    background-color: #c26521;
+}
