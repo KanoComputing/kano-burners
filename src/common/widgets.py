@@ -11,6 +11,19 @@ from PyQt4 import QtCore, QtGui
 from src.common.utils import load_css_for_widget, css_path
 
 
+class HoverButton(QtGui.QPushButton):
+
+    # @Override
+    def enterEvent(self, event):
+        QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        return super(HoverButton, self).enterEvent(event)
+
+    # @Override
+    def leaveEvent(self, event):
+        QtGui.QApplication.restoreOverrideCursor()
+        return super(HoverButton, self).leaveEvent(event)
+
+
 class ComboBox(QtGui.QComboBox):
 
     # these signals are emitted when the user clicks the
@@ -39,6 +52,16 @@ class ComboBox(QtGui.QComboBox):
     def mousePressEvent(self, event):
         self.opened.emit()
         return super(ComboBox, self).mousePressEvent(event)
+
+    # @Override
+    def enterEvent(self, event):
+        QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        return super(ComboBox, self).enterEvent(event)
+
+    # @Override
+    def leaveEvent(self, event):
+        QtGui.QApplication.restoreOverrideCursor()
+        return super(ComboBox, self).leaveEvent(event)
 
 
 class MultistageProgressBar(QtGui.QProgressBar):
@@ -79,7 +102,7 @@ class VerticalContainer(QtGui.QWidget):
         self.widgets = list()
 
     def addButton(self, text, onClick):
-        button = QtGui.QPushButton(text, self)
+        button = HoverButton(text, self)
         button.clicked.connect(onClick)
         load_css_for_widget(button, css_path + "button.css")
         self.widgets.append(button)
