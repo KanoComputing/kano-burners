@@ -8,19 +8,26 @@
 # [File description]
 
 
+import os
 import sys
 import time
 import platform
 
 from PyQt4 import QtGui, QtCore
 from src.common.ui import UI
-from src.common.utils import delete_dir, make_dir, is_internet, debugger
-from src.common.errors import INTERNET_ERROR, FREE_SPACE_ERROR, ARCHIVER_ERROR, \
-    NO_DISKS_ERROR
+from src.common.utils import delete_dir, make_dir, debugger
+from src.common.errors import NO_DISKS_ERROR
 
 
-REQUIRED_MB = 600  # MB necessary free space
 TEMP_DIR = ''  # set when detecting the platform and updated when a folder is created
+
+
+if getattr(sys, 'frozen', False):
+    # we are running in a |PyInstaller| bundle
+    basedir = sys._MEIPASS
+else:
+    # we are running in a normal Python environment
+    basedir = os.path.dirname(__file__)
 
 
 # Step 1: Detect platform to import appropriate modules
@@ -29,7 +36,7 @@ if platform.system() == 'Darwin':
     from src.osx.download import download_kano_os
     from src.osx.burn import start_burn_process
     from src.osx.disk import get_disks_list, unmount_disk, eject_disk, format_disk
-    from src.osx.dependency import is_gzip_installed, is_sufficient_space
+    from src.osx.dependency import check_dependencies
     TEMP_DIR = '/tmp/kano-burner/'
 
 elif platform.system() == 'Linux':
@@ -37,7 +44,7 @@ elif platform.system() == 'Linux':
     from src.linux.download import download_kano_os
     from src.linux.burn import start_burn_process
     from src.linux.disk import get_disks_list, unmount_disk, eject_disk, format_disk
-    from src.linux.dependency import is_gzip_installed, is_sufficient_space
+    from src.linux.dependency import check_dependencies
     TEMP_DIR = '/tmp/kano-burner/'
 
 elif platform.system() == 'Windows':
@@ -64,26 +71,12 @@ class BurnerGUI(UI):
         #debugger('Making sure program was ran with sudo')
         #enforce_root("You need to run this program as root.")
 
-        # Step 3: check for internet
-        if is_internet():
-            debugger('Internet connection detected')
+        # Step 3: check if dependencies are met
+        successful, error = check_dependencies(TEMP_DIR)
+        if successful:
+            debugger('All dependencies were met')
         else:
-            debugger('No internet connection detected')
-            self.showError(INTERNET_ERROR)
-
-        # Step 4: look for archiver tools
-        if is_gzip_installed():
-            debugger('Gzip is installed')
-        else:
-            debugger('Gzip is not installed')
-            self.showError(ARCHIVER_ERROR)
-
-        # Step 5: check for available space
-        if is_sufficient_space(TEMP_DIR, REQUIRED_MB):
-            debugger('Sufficient available space')
-        else:
-            debugger('Insufficient available space (min 600 MB)')
-            self.showError(FREE_SPACE_ERROR)
+            self.showError(error)
 
     def onComboBoxClick(self):
         self.disksComboBox.clear()

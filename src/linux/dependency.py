@@ -7,7 +7,38 @@
 # [File description]
 
 
-from src.common.utils import run_cmd, debugger
+from src.common.utils import run_cmd, is_internet, debugger
+from src.common.errors import INTERNET_ERROR, ARCHIVER_ERROR, FREE_SPACE_ERROR
+
+
+# TODO: grab this value with pySmartDL
+REQUIRED_MB = 600  # MB necessary free space
+
+
+def check_dependencies(tmp_dir):
+    # looking for an internet connection
+    if is_internet():
+        debugger('Internet connection detected')
+    else:
+        debugger('No internet connection detected')
+        return False, INTERNET_ERROR
+
+    # looking for a suitable archiver tool
+    if is_gzip_installed():
+        debugger('Gzip is installed')
+    else:
+        debugger('Gzip is not installed')
+        return False, ARCHIVER_ERROR
+
+    # making sure we have enough space to download OS
+    if is_sufficient_space(tmp_dir, REQUIRED_MB):
+        debugger('Sufficient available space')
+    else:
+        debugger('Insufficient available space (min {} MB)'.format(REQUIRED_MB))
+        return False, FREE_SPACE_ERROR
+
+    # everything is ok, return successful and no error
+    return True, None
 
 
 def is_gzip_installed():
