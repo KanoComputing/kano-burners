@@ -35,7 +35,7 @@ if platform.system() == 'Darwin':
     debugger('Mac OS detected')
     from src.osx.download import download_kano_os
     from src.osx.burn import start_burn_process
-    from src.osx.disk import get_disks_list, unmount_disk, eject_disk, format_disk
+    from src.osx.disk import get_disks_list, unmount_disk, eject_disk
     from src.osx.dependency import check_dependencies
     TEMP_DIR = '/tmp/kano-burner/'
 
@@ -43,15 +43,16 @@ elif platform.system() == 'Linux':
     debugger('Linux OS detected')
     from src.linux.download import download_kano_os
     from src.linux.burn import start_burn_process
-    from src.linux.disk import get_disks_list, unmount_disk, eject_disk, format_disk
+    from src.linux.disk import get_disks_list, unmount_disk, eject_disk
     from src.linux.dependency import check_dependencies
     TEMP_DIR = '/tmp/kano-burner/'
 
 elif platform.system() == 'Windows':
     debugger('Windows OS detected')
-    #import src.windows.download
-    #import src.windows.burn
-    #import src.windows.dependency
+    from src.linux.download import download_kano_os
+    from src.linux.burn import start_burn_process
+    from src.linux.disk import get_disks_list, unmount_disk, eject_disk
+    from src.linux.dependency import check_dependencies
     TEMP_DIR = 'C:\\temp\\kano-burner\\'  # ??
 
 
@@ -172,16 +173,6 @@ class BurnerBackendThread(QtCore.QThread):
             return
 
         # Step 9: unmount SD card
-        debugger('Unmounting disk {}..'.format(self.selected_disk))
-        self.showStage('Unmounting disk..')
-        unmount_disk(self.selected_disk)
-
-        # Step 10: clean SD card
-        debugger('Formatting disk {}..'.format(self.selected_disk))
-        self.showStage('Formatting disk..')
-        format_disk(self.selected_disk)
-
-        # Step 11: unmount SD card
         debugger('Unmounting disk {}..'.format(self.selected_disk))
         self.showStage('Unmounting disk..')
         unmount_disk(self.selected_disk)

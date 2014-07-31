@@ -7,7 +7,7 @@
 # [File description]
 
 
-from src.common.utils import run_cmd, debugger, BYTES_IN_GIGABYTE
+from src.common.utils import run_cmd, debugger
 
 
 def get_disks_list():
@@ -20,7 +20,7 @@ def get_disks_list():
     # check for parsing errors
     if len(disk_ids) != len(disk_names) or len(disk_names) != len(disk_sizes):
         return disks
-        
+
     for index in range(0, len(disk_ids)):
 
         # append all data here, this would need changing if logic changes
@@ -31,7 +31,7 @@ def get_disks_list():
         }
 
         # make sure we do not list any potential hard drive
-        if disk['size'][len(disk['size'])-2:] != 'GB' or float(disk['size'][:-2]) > 64:
+        if disk['size'][len(disk['size']) - 2:] != 'GB' or float(disk['size'][:-2]) > 64:
             debugger('Ignoring {}'.format(disk))
         else:
             disks.append(disk)
@@ -51,7 +51,7 @@ def get_disk_ids():
 
     if return_code:
         debugger('[ERROR] ' + error.strip('\n'))
-    
+
     return disk_ids
 
 
@@ -66,7 +66,7 @@ def get_disk_names():
 
     if return_code:
         debugger('[ERROR] ' + error.strip('\n'))
-    
+
     # grab the first line of the output and the name is from the 4th word onwards
     #return ' '.join(output.split('\n')[0].split()[4:])
     return disk_names
@@ -117,6 +117,7 @@ def unmount_volumes(disk_id):
             debugger('[ERROR] ' + error.strip('\n'))
 
 
+# Not used - can be included in kano-burner > BurnerBackendThread > run
 def format_disk(disk_id):
     cmd = 'mkdosfs -I -F 32 -v {}'.format(disk_id)
     _, error, return_code = run_cmd(cmd)

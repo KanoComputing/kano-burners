@@ -78,6 +78,7 @@ def unmount_disk(disk_id):
         debugger('[ERROR] ' + error.strip('\n'))
 
 
+# Not used - can be included in kano-burner > BurnerBackendThread > run
 def format_disk(disk_id):
     cmd = 'diskutil eraseDisk fat32 UNTITLED {}'.format(disk_id)
     _, error, return_code = run_cmd(cmd)
