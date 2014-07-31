@@ -15,6 +15,7 @@ import platform
 
 from PyQt4 import QtGui, QtCore
 from src.common.ui import UI
+from src.common.download import download_kano_os
 from src.common.utils import delete_dir, make_dir, debugger
 from src.common.errors import NO_DISKS_ERROR
 
@@ -33,7 +34,6 @@ else:
 # Step 1: Detect platform to import appropriate modules
 if platform.system() == 'Darwin':
     debugger('Mac OS detected')
-    from src.osx.download import download_kano_os
     from src.osx.burn import start_burn_process
     from src.osx.disk import get_disks_list, unmount_disk, eject_disk
     from src.osx.dependency import check_dependencies
@@ -41,7 +41,6 @@ if platform.system() == 'Darwin':
 
 elif platform.system() == 'Linux':
     debugger('Linux OS detected')
-    from src.linux.download import download_kano_os
     from src.linux.burn import start_burn_process
     from src.linux.disk import get_disks_list, unmount_disk, eject_disk
     from src.linux.dependency import check_dependencies
@@ -49,7 +48,6 @@ elif platform.system() == 'Linux':
 
 elif platform.system() == 'Windows':
     debugger('Windows OS detected')
-    from src.linux.download import download_kano_os
     from src.linux.burn import start_burn_process
     from src.linux.disk import get_disks_list, unmount_disk, eject_disk
     from src.linux.dependency import check_dependencies
