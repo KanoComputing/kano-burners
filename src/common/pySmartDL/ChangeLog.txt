@@ -1,0 +1,43 @@
+Version history of pySmartDL
+=============================
+
+Below you find a list with the added features, changes and fixes for
+each version.
+
+======================
+(Version 1.2.3 beta; 04/06/14)
+- NEW: Added fix_urls as an option.
+- IMPROVE: Better testing & package handling.
+
+(Version 1.2.2 beta; 15/02/14)
+- NEW: HTTP Basic Access authentication.
+
+(Version 1.2.1 beta; 13/02/14)
+- NEW: Fetching UNIX hash sums format support.
+- FIX: Few minor typos.
+
+(Version 1.2.0 beta; 07/02/14)
+- NEW: Python 3 support (3.2+).
+- NEW: The threadpool module is changed from threadpool to the >=python3.2 builtin concurrent.futures module.
+- FIX: Few minor bugfixes.
+
+(Version 1.1.2 beta; 11/01/14)
+- IMPROVE: Added unformated url input in the examples documentation section.
+- IMPROVE: Better documentation for some functions.
+- FIX: sizeof_human failed on python2.6.
+- FIX: Sometimes didn't escape urls proprely.
+- FIX: Sphinx wasn't able to locate the pySmartDL package.
+
+(Version 1.1.1 beta; 04/01/14)
+- NEW: Python 2.6 support.
+
+(Version 1.1.0 beta; 03/01/14)
+- first public beta release
+- NEW: Linux support.
+- IMPROVE: Shows human-readable filesizes and transfer rates.
+- FIX: Now setup.py test works.
+- FIX: Few more bugfixes.
+
+
+(Version 1.0.0 alpha; 01/01/14)
+- first alpha beta release
