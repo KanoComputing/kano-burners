@@ -8,8 +8,7 @@
 
 
 from time import sleep
-from pySmartDL import SmartDL, HashFailedException
-
+from src.common.pySmartDL.pySmartDL import SmartDL, HashFailedException
 from src.common.utils import debugger, read_file_contents_as_lines
 from src.common.errors import DOWNLOAD_ERROR, MD5_ERROR
 
