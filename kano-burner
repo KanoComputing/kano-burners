@@ -163,8 +163,8 @@ class BurnerBackendThread(QtCore.QThread):
         # Step 8: download the latest Kano OS image
         debugger('Downloading Kano OS..')
         self.showStage('Downloading Kano OS..')
-        successful, error = download_kano_os(TEMP_DIR, self.showProgress)
-        if not successful:
+        os_info, error = download_kano_os(TEMP_DIR, self.showProgress)
+        if error:
             self.showFinish(error)
             debugger('Removing temp files')
             delete_dir(TEMP_DIR)
@@ -178,7 +178,7 @@ class BurnerBackendThread(QtCore.QThread):
         # Step 12: burn image
         debugger('Burning image to SD card on ' + self.selected_disk)
         self.showStage('Burning Kano OS..')
-        successful, error = start_burn_process(TEMP_DIR, self.selected_disk, self.showProgress)
+        successful, error = start_burn_process(TEMP_DIR, os_info, self.selected_disk, self.showProgress)
         if not successful:
             self.showFinish(error)
             return
