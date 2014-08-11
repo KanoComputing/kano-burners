@@ -166,7 +166,7 @@ class BurnerBackendThread(QtCore.QThread):
         os_info, error = download_kano_os(TEMP_DIR, self.showProgress)
         if error:
             self.showFinish(error)
-            debugger('Removing temp files')
+            debugger('Removing corrupted temp files')
             delete_dir(TEMP_DIR)
             return
 

@@ -67,7 +67,7 @@ def burn_kano_os(path, disk, size, return_queue, report_progress_ui):
                                .format(speed, eta, progress))
 
         # watch out for an error output from dd
-        if 'Input/output error' in line:
+        if 'error' in line or 'invalid' in line:
             failed = True
 
     if failed:

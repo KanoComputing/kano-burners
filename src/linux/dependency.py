@@ -20,7 +20,7 @@ def check_dependencies(tmp_dir):
     if is_internet():
         debugger('Internet connection detected')
     else:
-        debugger('No internet connection detected')
+        debugger('No internet connection found')
         return False, INTERNET_ERROR
 
     # looking for a suitable archiver tool
