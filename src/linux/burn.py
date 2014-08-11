@@ -16,22 +16,19 @@ from src.common.utils import run_cmd, debugger, BYTES_IN_MEGABYTE
 from src.common.errors import BURN_ERROR
 
 
-uncompressed_size = 0  # gets set the first time the uncompressed image is calculated
-                       # avoids recalculating when trying again
+def start_burn_process(path, os_info, disk, report_progress_ui):
 
-
-def start_burn_process(path, disk, report_progress_ui):
-    global uncompressed_size
-
-    # check if the file is found and get it's size
-    report_progress_ui(0, 'calculating uncompressed image size..')
-    if not uncompressed_size:
-        uncompressed_size = get_gzip_uncompressed_size(path + 'Kanux-Beta-v1.1.0.img.gz')
+    # Set the progress to 0% on the UI progressbar, and write what we're up to
+    report_progress_ui(0, 'preparing to download OS image..')
 
     # since a thread cannot return, use this queue to add the return boolean
     thread_output = Queue.Queue()
-    burn_thread = threading.Thread(target=burn_kano_os, args=(path, disk, uncompressed_size,
-                                   thread_output, report_progress_ui))
+
+    # start the burning process on a separate thread and such that this one polls for progress
+    burn_thread = threading.Thread(target=burn_kano_os,
+                                   args=(path + os_info['filename'], disk,
+                                         os_info['uncompressed_size'], thread_output,
+                                         report_progress_ui))
     burn_thread.start()
 
     # delegate the polling loop job and pass the reference of the burning thread
@@ -48,7 +45,7 @@ def start_burn_process(path, disk, report_progress_ui):
 
 
 def burn_kano_os(path, disk, size, return_queue, report_progress_ui):
-    cmd = 'gzip -dc {}Kanux-Beta-v1.1.0.img.gz | dd of={} bs=4M'.format(path, disk)
+    cmd = 'gzip -dc {} | dd of={} bs=4M'.format(path, disk)
     process = subprocess.Popen(cmd, shell=True, stderr=subprocess.PIPE)
     failed = False
 
@@ -70,7 +67,7 @@ def burn_kano_os(path, disk, size, return_queue, report_progress_ui):
                                .format(speed, eta, progress))
 
         # watch out for an error output from dd
-        if 'Input/output error' in line:
+        if 'error' in line or 'invalid' in line:
             failed = True
 
     if failed:
@@ -112,15 +109,3 @@ def calculate_eta(progress, total, speed):
         return '{} minutes, {} seconds'.format(minutes, seconds)
     else:
         return '{} seconds'.format(seconds)
-
-
-def get_gzip_uncompressed_size(path):
-    debugger('Calculating uncompressed image size..')
-    cmd = 'gzip -dc {} | wc -c'.format(path)
-    process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-
-    for line in iter(process.stdout.readline, ''):
-        output = line
-
-    debugger('Uncompressed gzip file is {} bytes'.format(int(output)))
-    return int(output)
