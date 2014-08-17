@@ -13,20 +13,8 @@ import urllib2
 import traceback
 
 from src.common.pySmartDL.pySmartDL import SmartDL, HashFailedException
-from src.common.utils import debugger
+from src.common.utils import debugger, LATEST_OS_INFO_URL
 from src.common.errors import DOWNLOAD_ERROR, MD5_ERROR
-
-
-TEST_URL = 'http://repo.kano.me/archive/pool/main/r/raspberrypi-firmware/libraspberrypi-doc_1.20140326-1.20140413_armhf.deb'
-TEST2_URL = 'http://dev.kano.me/public/squeak.tar.gz'
-#GZIP_OS_URL = 'http://dev.kano.me/public/kanux-latest.img.gz'
-#GZIP_MD5_URL = 'http://dev.kano.me/public/kanux-latest.img.gz.md5'
-#ZIP_OS_URL = 'http://dev.kano.me/public/Kanux-Beta-v1.1.0.img.gz'
-#ZIP_MD5_URL = 'http://dev.kano.me/public/Kanux-Beta-v1.1.0.img.gz.md5'
-GZIP_OS_URL = 'http://dev.kano.me/public/Kanux-Beta-v1.1.0.img.gz'
-GZIP_MD5_URL = 'http://dev.kano.me/public/Kanux-Beta-v1.1.0.img.gz.md5'
-
-LATEST_OS_INFO_URL = 'http://downloads.kano.me/public/latest.json'
 
 
 class Downloader(SmartDL):
@@ -120,5 +108,4 @@ def get_latest_os_info():
 
     # merge the two jsons and return a single info dict result
     os_info = {key: value for (key, value) in (latest_json.items() + os_json.items())}
-    debugger('os_info is {}'.format(os_info))
     return os_info

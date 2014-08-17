@@ -8,7 +8,6 @@
 # [File description]
 
 
-import os
 import sys
 import time
 import platform
@@ -23,35 +22,27 @@ from src.common.errors import NO_DISKS_ERROR
 TEMP_DIR = ''  # set when detecting the platform and updated when a folder is created
 
 
-if getattr(sys, 'frozen', False):
-    # we are running in a |PyInstaller| bundle
-    basedir = sys._MEIPASS
-else:
-    # we are running in a normal Python environment
-    basedir = os.path.dirname(__file__)
-
-
 # Step 1: Detect platform to import appropriate modules
 if platform.system() == 'Darwin':
     debugger('Mac OS detected')
     from src.osx.burn import start_burn_process
-    from src.osx.disk import get_disks_list, unmount_disk, eject_disk
-    from src.osx.dependency import check_dependencies
+    from src.osx.disk import get_disks_list, prepare_disk, eject_disk
+    from src.osx.dependency import check_dependencies, request_admin_privileges
     TEMP_DIR = '/tmp/kano-burner/'
 
 elif platform.system() == 'Linux':
     debugger('Linux OS detected')
     from src.linux.burn import start_burn_process
-    from src.linux.disk import get_disks_list, unmount_disk, eject_disk
-    from src.linux.dependency import check_dependencies
+    from src.linux.disk import get_disks_list, prepare_disk, eject_disk
+    from src.linux.dependency import check_dependencies, request_admin_privileges
     TEMP_DIR = '/tmp/kano-burner/'
 
 elif platform.system() == 'Windows':
     debugger('Windows OS detected')
-    from src.linux.burn import start_burn_process
-    from src.linux.disk import get_disks_list, unmount_disk, eject_disk
-    from src.linux.dependency import check_dependencies
-    TEMP_DIR = 'C:\\temp\\kano-burner\\'  # ??
+    from src.windows.burn import start_burn_process
+    from src.windows.disk import get_disks_list, prepare_disk, eject_disk
+    from src.windows.dependency import check_dependencies, request_admin_privileges
+    TEMP_DIR = 'C:\\temp\\kano-burner\\'
 
 
 class BurnerGUI(UI):
@@ -64,17 +55,14 @@ class BurnerGUI(UI):
         debugger('Making temp directory')
         make_dir(TEMP_DIR)
 
-        debugger('Checking for dependencies..')
-
-        # Step 2: check root
-        #debugger('Making sure program was ran with sudo')
-        #enforce_root("You need to run this program as root.")
+        # TODO: Step 2: check root
+        # debugger('Making sure program was ran with sudo')
+        # enforce_root("You need to run this program as root.")
 
         # Step 3: check if dependencies are met
-        successful, error = check_dependencies(TEMP_DIR)
-        if successful:
-            debugger('All dependencies were met')
-        else:
+        debugger('Checking for dependencies..')
+        error = check_dependencies(TEMP_DIR)
+        if error:
             self.showError(error)
 
     def onComboBoxClick(self):
@@ -87,8 +75,9 @@ class BurnerGUI(UI):
         if not self.disks:
             self.showError(NO_DISKS_ERROR)
 
+        # add the disks to the dropdown menu
         for disk in self.disks:
-            self.disksComboBox.addItem('{}, size {}'.format(disk['name'], disk['size']))
+            self.disksComboBox.addItem('{}, {}'.format(disk['name'], disk['size']))
 
     def onStartClick(self):
         # check if the user has selected a disk, otherwise show an error
@@ -150,6 +139,9 @@ class BurnerBackendThread(QtCore.QThread):
     def showStage(self, text):
         self.notifyStage.emit(text)
 
+    def showDescription(self, text):
+        self.notifyDescription.emit(text)
+
     def showProgress(self, progress, text):
         self.notifyProgress.emit(progress)
         self.notifyDescription.emit(text)
@@ -166,30 +158,30 @@ class BurnerBackendThread(QtCore.QThread):
         os_info, error = download_kano_os(TEMP_DIR, self.showProgress)
         if error:
             self.showFinish(error)
-            debugger('Removing corrupted temp files')
+            debugger('Removing temp files')
             delete_dir(TEMP_DIR)
             return
 
-        # Step 9: unmount SD card
-        debugger('Unmounting disk {}..'.format(self.selected_disk))
-        self.showStage('Unmounting disk..')
-        unmount_disk(self.selected_disk)
+        # Step 9: preparing the disk (unmounting, formatting, etc)
+        debugger('Preparing {} for burning..'.format(self.selected_disk))
+        self.showStage('Preparing disk for burning..')
+        prepare_disk(self.selected_disk, self.showDescription)
 
-        # Step 12: burn image
+        # Step 10: burn image
         debugger('Burning image to SD card on ' + self.selected_disk)
         self.showStage('Burning Kano OS..')
-        successful, error = start_burn_process(TEMP_DIR, os_info, self.selected_disk, self.showProgress)
-        if not successful:
+        error = start_burn_process(TEMP_DIR, os_info, self.selected_disk, self.showProgress)
+        if error:
             self.showFinish(error)
             return
 
-        # Step 13: eject disk
+        # Step 11: eject disk
         debugger('Ejecting disk..')
         self.showStage('Waiting for things to settle..')
         time.sleep(5)  # wait for dd to mount the disk back
         eject_disk(self.selected_disk)
 
-        # Step 14: success messsage and notify UI of finish with no error
+        # Step 12: success messsage and notify UI of finish with no error
         self.showStage("Kano OS has successfully been burned. Let's go!")
         self.notifyFinish.emit(dict())
 
@@ -201,4 +193,5 @@ def main():
 
 
 if __name__ == '__main__':
+    request_admin_privileges()
     main()

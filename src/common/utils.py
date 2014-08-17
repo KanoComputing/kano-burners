@@ -15,15 +15,27 @@ from urllib2 import urlopen
 from PyQt4 import QtCore
 
 
+# Paths used throughout the project
 res_path = "res/"
 images_path = res_path + "images/"
 css_path = res_path + "CSS/"
+win_tools_path = "win\\"
+_7zip_path = win_tools_path + "7zip\\"
+_dd_path = win_tools_path + "dd\\"
+_nircmd_path = win_tools_path + "nircmd\\"
 
 
-BYTES_IN_MEGABYTE = 1048576     # conversion constants
+# Conversion constants
+BYTES_IN_MEGABYTE = 1048576
 BYTES_IN_GIGABYTE = 1073741824
+BYTES_IN_GIBIBYTE = 1000000000
 
 
+# The URL used to download information about the lastest OS release
+LATEST_OS_INFO_URL = 'http://downloads.kano.me/public/latest.json'
+
+
+# This should be FALSE when building for distribution
 def debugger(text):
     if True:
         print text
@@ -46,6 +58,16 @@ def restore_signals():
                 signal.signal(getattr(signal, sig), signal.SIG_DFL)
 
 
+# used on Windows as there is no support for 'preexec_fn'
+def run_cmd_no_pipe(cmd):
+    process = subprocess.Popen(cmd, shell=True,
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    stdout, stderr = process.communicate()
+    return_code = process.returncode
+    return stdout, stderr, return_code
+
+
 def delete_dir(directory):
     if os.path.exists(directory):
         shutil.rmtree(directory)
@@ -62,6 +84,11 @@ def read_file_contents_as_lines(path):
             content = infile.readlines()
             lines = [line.strip() for line in content]
             return lines
+
+
+def write_file_contents(path, data):
+    with open(path, 'w') as outfile:
+        outfile.write(data)
 
 
 def is_internet():

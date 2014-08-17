@@ -41,7 +41,6 @@ def get_disks_list():
 
 
 def get_disk_ids():
-    #cmd = "fdisk -l | grep 'Disk /dev/.*:' | awk '{print $2}'"
     cmd = "parted --list | grep 'Disk /dev/.*:' | awk '{print $2}'"
     output, error, return_code = run_cmd(cmd)
 
@@ -56,7 +55,6 @@ def get_disk_ids():
 
 
 def get_disk_names():
-    #cmd = "lshw -short | grep {}".format(disk_id)
     cmd = "parted --list | grep 'Model:'"
     output, error, return_code = run_cmd(cmd)
 
@@ -68,12 +66,10 @@ def get_disk_names():
         debugger('[ERROR] ' + error.strip('\n'))
 
     # grab the first line of the output and the name is from the 4th word onwards
-    #return ' '.join(output.split('\n')[0].split()[4:])
     return disk_names
 
 
 def get_disk_sizes():
-    #cmd = "fdisk -l | grep 'Disk %s:' | awk '{print $5}'" % disk_id
     cmd = "parted --list | grep 'Disk /dev/.*:' | awk '{print $3}'"
     output, error, return_code = run_cmd(cmd)
 
@@ -84,8 +80,15 @@ def get_disk_sizes():
     if return_code:
         debugger('[ERROR] ' + error.strip('\n'))
 
-    #return '{0:.2f} GB'.format(float(int(output)) / BYTES_IN_GIGABYTE)
     return disk_sizes
+
+
+def prepare_disk(disk_id, report_ui):
+    report_ui('unmounting disk')
+    unmount_disk(disk_id)
+
+    report_ui('formating disk')
+    format_disk(disk_id)
 
 
 def unmount_disk(disk_id):
@@ -117,7 +120,6 @@ def unmount_volumes(disk_id):
             debugger('[ERROR] ' + error.strip('\n'))
 
 
-# Not used - can be included in kano-burner > BurnerBackendThread > run
 def format_disk(disk_id):
     cmd = 'mkdosfs -I -F 32 -v {}'.format(disk_id)
     _, error, return_code = run_cmd(cmd)

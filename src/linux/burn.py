@@ -39,9 +39,9 @@ def start_burn_process(path, os_info, disk, report_progress_ui):
 
     successful = thread_output.get()
     if not successful:
-        return False, BURN_ERROR
+        return BURN_ERROR
     else:
-        return True, None
+        return None
 
 
 def burn_kano_os(path, disk, size, return_queue, report_progress_ui):
