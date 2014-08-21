@@ -7,7 +7,7 @@
 # [File description]
 
 
-from src.common.utils import run_cmd, debugger
+from src.common.utils import run_cmd, debugger, BYTES_IN_GIBIBYTE
 
 
 def get_disks_list():
@@ -70,12 +70,13 @@ def get_disk_names():
 
 
 def get_disk_sizes():
-    cmd = "parted --list | grep 'Disk /dev/.*:' | awk '{print $3}'"
+    cmd = "fdisk -l | grep 'Disk /dev/' | awk '{print $5}'"
     output, error, return_code = run_cmd(cmd)
 
     disk_sizes = []
     for size in output.splitlines():
-        disk_sizes.append(size)
+        size_gb = float(size) / BYTES_IN_GIBIBYTE
+        disk_sizes.append('{0:.2f} GB'.format(size_gb))
 
     if return_code:
         debugger('[ERROR] ' + error.strip('\n'))
@@ -105,7 +106,7 @@ def unmount_disk(disk_id):
 
 
 def unmount_volumes(disk_id):
-    # all volumes on a disk have an index attached (e.g. /dev/sdb1, /dev/sdb2)
+    # all volumes on a disk have an index attached e.g. /dev/sdb1, /dev/sdb2
     cmd = "fdisk -l | grep '%s[0-9][0-9]*' | awk '{print $1}'" % disk_id
     output, _, _ = run_cmd(cmd)
 
