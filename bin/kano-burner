@@ -22,9 +22,16 @@
 #   and this is done through custom Qt signals.
 
 
+import os
 import sys
 import time
 import platform
+
+# append to Python's system path the path up one level
+# this allows the executable to import normally from the bin/ directory
+if __name__ == '__main__' and __package__ is None:
+    dir_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    sys.path.insert(1, dir_path)
 
 from PyQt4 import QtGui, QtCore
 from src.common.ui import UI

@@ -20,7 +20,7 @@ if getattr(sys, 'frozen', False):
     base_path = os.path.abspath(sys._MEIPASS)
 else:
     debugger('Running from source')
-    base_path = os.getcwd()
+    base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 
 
 # setting Resources paths - css and images
