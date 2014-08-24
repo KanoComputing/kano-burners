@@ -11,4 +11,6 @@
 pyi-makespec \
     --onefile \
     --noconsole \
+    --name="Kano Burner" \
+    --icon=../../res/icon/burner_icon.icns \
     ../../bin/kano-burner

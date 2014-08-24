@@ -12,4 +12,4 @@ pyinstaller ^
     --specpath=%HomePath%"\Desktop\Kano Burner\build" ^
     --workpath=%HomePath%"\Desktop\Kano Burner\build" ^
     --clean ^
-    kano-burner.spec
+    "Kano Burner.spec"

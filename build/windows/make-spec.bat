@@ -10,4 +10,6 @@
 pyi-makespec ^
     --onefile ^
     --noconsole ^
+    --name="Kano Burner" ^
+    --icon="..\..\res\icon\burner_icon.ico" ^
     ..\..\bin\kano-burner

@@ -13,4 +13,4 @@ pyinstaller \
     --specpath=~/Desktop/Kano\ Burner/build/ \
     --workpath=~/Desktop/Kano\ Burner/build/ \
     --clean \
-    kano-burner.spec
+    Kano\ Burner.spec
