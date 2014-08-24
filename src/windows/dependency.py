@@ -71,7 +71,6 @@ def is_tools_preset():
 
 def is_sufficient_space(path, required_mb):
     cmd = "dir {}".format(path)
-    debugger(cmd)
     output, _, _ = run_cmd_no_pipe(cmd)
 
     # grab the last line from the output
