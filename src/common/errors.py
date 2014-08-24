@@ -31,10 +31,6 @@ MD5_ERROR = {
     'title': 'Could not verify download integrity..',
     'description': 'Kano OS download may have been corrupted - please try again'
 }
-UNCOMPRESS_ERROR = {
-    'title': 'Uncompressing Kano OS failed..',
-    'description': 'We may have made a mistake here - let us know on the link below!'
-}
 BURN_ERROR = {
     'title': 'Burning Kano OS failed..',
     'description': 'Make sure the SD card is still correctly inserted and try again'

@@ -5,7 +5,21 @@
 # Copyright (C) 2014 Kano Computing Ltd.
 # License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
 #
-# [File description]
+#
+# This is the python executable which launches Kano Burner.
+#
+# Firstly, it detects the OS it is runnin on - Mac OSX, Linux, or Windows
+# and then it imports the appropriate modules. It is the only place we detect the OS.
+#
+# We use two classes to distinguish between front-end and back-end.
+#
+# BurnerGUI class extends the UI class to override the methods which are called
+#   on the appropriate events (e.g. start button click). This gives the flexibility
+#   of reusing the UI class and the abstraction of how the UI class works.
+#
+# BurnerBackendThread class starts the main processes of downloading, burning and
+#   runs them in the background. It also needs to report issues and progress to the UI
+#   and this is done through custom Qt signals.
 
 
 import sys
@@ -22,7 +36,7 @@ from src.common.errors import NO_DISKS_ERROR
 TEMP_DIR = ''  # set when detecting the platform and updated when a folder is created
 
 
-# Step 1: Detect platform to import appropriate modules
+# Detect OS platform and import appropriate modules
 if platform.system() == 'Darwin':
     debugger('Mac OS detected')
     from src.osx.burn import start_burn_process
@@ -51,15 +65,15 @@ class BurnerGUI(UI):
         super(BurnerGUI, self).__init__()
 
     def onStart(self):
-        # Step 1: make temp directory
+        # make the temp directory to hold the downloaded image
         debugger('Making temp directory')
         make_dir(TEMP_DIR)
 
-        # TODO: Step 2: check root
+        # TODO: check root
         # debugger('Making sure program was ran with sudo')
         # enforce_root("You need to run this program as root.")
 
-        # Step 3: check if dependencies are met
+        # check if dependencies are met
         debugger('Checking for dependencies..')
         error = check_dependencies(TEMP_DIR)
         if error:
@@ -69,7 +83,7 @@ class BurnerGUI(UI):
         self.disksComboBox.clear()
         self.startButton.setEnabled(True)
 
-        # Step 6: list drives
+        # list drives
         debugger('Scanning drives..')
         self.disks = get_disks_list()
         if not self.disks:
@@ -80,18 +94,16 @@ class BurnerGUI(UI):
             self.disksComboBox.addItem('{}, {}'.format(disk['name'], disk['size']))
 
     def onStartClick(self):
-        # check if the user has selected a disk, otherwise show an error
+        # the button is disabled until the user selects a disk - we can safely proceed
+        # grab the disk id e.g. osx: /dev/disk1 and switch screen to progressScreen
         selected_disk = self.disks[self.disksComboBox.currentIndex()]['id']
-
-        # switch screen to progressScreen and grab the disk id e.g. /dev/disk1
         self.showScreen(self.progressScreen)
 
-        # Step 7: prepare backend
         # thread to download and burn the image
         backendThread = BurnerBackendThread(selected_disk)
 
-        # connecting Qt singals to methods on the UI
-        # so that the backend can report its progress
+        # connecting Qt signals to methods on the UI
+        # such that the backend can report its progress
         backendThread.notifyProgress.connect(self.setProgress)
         backendThread.notifyStage.connect(self.setStatusTitle)
         backendThread.notifyDescription.connect(self.setStatusDescription)
@@ -118,7 +130,6 @@ class BurnerGUI(UI):
         self.close()
 
     def onFinish(self):
-        # Step 15: remove temp files
         debugger('Removing temp files')
         delete_dir(TEMP_DIR)
 
@@ -152,7 +163,7 @@ class BurnerBackendThread(QtCore.QThread):
     def run(self):
         global TEMP_DIR
 
-        # Step 8: download the latest Kano OS image
+        # Step 1: download the latest Kano OS image
         debugger('Downloading Kano OS..')
         self.showStage('Downloading Kano OS..')
         os_info, error = download_kano_os(TEMP_DIR, self.showProgress)
@@ -162,12 +173,12 @@ class BurnerBackendThread(QtCore.QThread):
             delete_dir(TEMP_DIR)
             return
 
-        # Step 9: preparing the disk (unmounting, formatting, etc)
+        # Step 2: preparing the disk (unmounting, formatting, etc)
         debugger('Preparing {} for burning..'.format(self.selected_disk))
         self.showStage('Preparing disk for burning..')
         prepare_disk(self.selected_disk, self.showDescription)
 
-        # Step 10: burn image
+        # Step 3: burn the OS image onto the selected disk
         debugger('Burning image to SD card on ' + self.selected_disk)
         self.showStage('Burning Kano OS..')
         error = start_burn_process(TEMP_DIR, os_info, self.selected_disk, self.showProgress)
@@ -175,13 +186,13 @@ class BurnerBackendThread(QtCore.QThread):
             self.showFinish(error)
             return
 
-        # Step 11: eject disk
+        # Step 4: eject selected disk so the user can unplug safely
         debugger('Ejecting disk..')
         self.showStage('Waiting for things to settle..')
         time.sleep(5)  # wait for dd to mount the disk back
         eject_disk(self.selected_disk)
 
-        # Step 12: success messsage and notify UI of finish with no error
+        # Finally, show success messsage, notify UI of finish, and return an empty error
         self.showStage("Kano OS has successfully been burned. Let's go!")
         self.notifyFinish.emit(dict())
 

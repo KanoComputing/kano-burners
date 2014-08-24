@@ -7,57 +7,63 @@
 # [File description]
 
 
-from src.common.utils import run_cmd_no_pipe, write_file_contents, debugger, \
-    _dd_path, _nircmd_path, BYTES_IN_GIBIBYTE
+from src.common.utils import run_cmd_no_pipe, write_file_contents, debugger, BYTES_IN_GIBIBYTE
+from src.common.paths import _dd_path, _nircmd_path
 
 
 def get_disks_list():
-    disks = list()
+    try:
+        disks = list()
 
-    cmd = "wmic diskdrive get deviceid, model, size /format:list"
-    output, error, return_code = run_cmd_no_pipe(cmd)
+        cmd = "wmic diskdrive get deviceid, model, size /format:list"
+        debugger('get_disks_list(): cmd = ' + cmd)
+        output, error, return_code = run_cmd_no_pipe(cmd)
+        debugger('get_disks_list(): output = ' + output)
 
-    if return_code:
-        debugger('[ERROR] ' + error.strip('\n'))
+        if return_code:
+            debugger('[ERROR] ' + error.strip('\n'))
 
-    # remove random empty lines in the output
-    output_lines = [line for line in output.splitlines() if line]
+        # remove random empty lines in the output
+        output_lines = [line for line in output.splitlines() if line]
 
-    for index in range(0, len(output_lines)):
-        if output_lines[index].startswith("DeviceID="):
+        for index in range(0, len(output_lines)):
+            if output_lines[index].startswith("DeviceID="):
 
-            # grab the disk id from e.g. \\.\PHYSICALDRIVE0 and use Partition0
-            # which for dd is the entire disk
-            id = output_lines[index].split('=')[1][-1]
-            disk_id = "\\\\?\\Device\\Harddisk{}\\Partition0".format(id)
+                # grab the disk id from e.g. \\.\PHYSICALDRIVE0 and use Partition0
+                # which for dd is the entire disk
+                id = output_lines[index].split('=')[1][-1]
+                disk_id = "\\\\?\\Device\\Harddisk{}\\Partition0".format(id)
 
-            # for the disk model, remove the last word which is always 'device'
-            model = output_lines[index + 1].split('=')[1]
-            disk_name = ' '.join(model.split()[1:-1])
+                # for the disk model, remove the last word which is always 'device'
+                model = output_lines[index + 1].split('=')[1]
+                disk_name = ' '.join(model.split()[1:-1])
 
-            # the size may not be listed (i.e. ''), in which case we assume
-            # the device is not plugged in e.g. an empty USB SD card reader
-            disk_size = -1
-            try:
-                size_bytes = float(output_lines[index + 2].split('=')[1])
-                disk_size = int(size_bytes / BYTES_IN_GIBIBYTE)
-            except:
-                pass
+                # the size may not be listed (i.e. ''), in which case we assume
+                # the device is not plugged in e.g. an empty USB SD card reader
+                disk_size = -1
+                try:
+                    size_bytes = float(output_lines[index + 2].split('=')[1])
+                    disk_size = size_bytes / BYTES_IN_GIBIBYTE
+                except:
+                    pass
 
-            # append all data here, this would need changing if logic changes
-            disk = {
-                'id': disk_id,
-                'name': disk_name,
-                'size': disk_size
-            }
+                # append all data here, this would need changing if logic changes
+                disk = {
+                    'id': disk_id,
+                    'name': disk_name,
+                    'size': disk_size
+                }
 
-            # make sure we do not list any potential hard drive
-            if disk['size'] > 64 or disk['size'] == -1:
-                debugger('Ignoring {}'.format(disk))
-            else:
-                disk['size'] = str(disk['size']) + " GB"
-                disks.append(disk)
-                debugger('Listing {}'.format(disk))
+                # make sure we do not list any potential hard drive
+                if disk['size'] > 64 or disk['size'] == -1:
+                    debugger('Ignoring {}'.format(disk))
+                else:
+                    disk['size'] = '{0:.2f} GB'.format(disk['size'])
+                    disks.append(disk)
+                    debugger('Listing {}'.format(disk))
+    except:
+        import traceback
+        debugger(traceback.format_exc())
 
     return disks
 
@@ -110,7 +116,7 @@ def get_disk_volume_and_mount(disk_id):
     disk_mount = output.splitlines()[-1].split()[2]
 
     # we now need to link the mount point to the volume id that is actually used
-    cmd = '{}dd.exe --list'.format(_dd_path)
+    cmd = '{}\\dd.exe --list'.format(_dd_path)
     _, output, return_code = run_cmd_no_pipe(cmd)
 
     if not return_code:
@@ -133,7 +139,7 @@ def get_disk_volume_and_mount(disk_id):
 
 
 def close_all_explorer_windows():
-    cmd = '{}nircmd.exe win close class "CabinetWClass"'.format(_nircmd_path)
+    cmd = '{}\\nircmd.exe win close class "CabinetWClass"'.format(_nircmd_path)
     _, error, return_code = run_cmd_no_pipe(cmd)
 
     if not return_code:
@@ -143,7 +149,7 @@ def close_all_explorer_windows():
 
 
 def test_write(disk_mount):
-    cmd = '{}dd.exe if=/dev/random of=\\\\.\\{}: bs=4M count=10'.format(_dd_path, disk_mount)
+    cmd = '{}\\dd.exe if=/dev/random of=\\\\.\\{}: bs=4M count=10'.format(_dd_path, disk_mount)
     _, output, return_code = run_cmd_no_pipe(cmd)
 
     if not return_code:
@@ -152,6 +158,7 @@ def test_write(disk_mount):
         debugger('[ERROR] test_write(): ' + output.strip('\n'))
 
 
+# This function is not currently being used
 # WARNING: If this function is called make sure mount_disk() is executed!
 #          Otherwise, the mount point will remain removed from the volume directory!
 #          This is a persistent change and CANNOT be fixed by a reboot!
@@ -165,6 +172,7 @@ def unmount_disk(disk_mount):
         debugger('[ERROR] unmount_disk(): ' + error.strip('\n'))
 
 
+# This function is not currently being used
 # WARNING: If unmount_disk() was called, make sure this function is executed!
 #          Otherwise, the mount point will remain removed from the volume directory!
 #          This is a persistent change and CANNOT be fixed by a reboot!

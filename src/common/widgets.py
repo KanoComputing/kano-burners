@@ -7,8 +7,10 @@
 # [File description]
 
 
+import os
 from PyQt4 import QtCore, QtGui
-from src.common.utils import load_css_for_widget, css_path
+from src.common.utils import load_css_for_widget
+from src.common.paths import images_path, css_path
 
 
 class HoverButton(QtGui.QPushButton):
@@ -104,21 +106,21 @@ class VerticalContainer(QtGui.QWidget):
     def addButton(self, text, onClick):
         button = HoverButton(text, self)
         button.clicked.connect(onClick)
-        load_css_for_widget(button, css_path + "button.css")
+        load_css_for_widget(button, os.path.join(css_path, 'button.css'))
         self.widgets.append(button)
         return button
 
     def addProgressBar(self, stages=1):
         progressBar = MultistageProgressBar(self, stages)
         progressBar.setTextVisible(False)
-        load_css_for_widget(progressBar, css_path + "progressbar.css")
+        load_css_for_widget(progressBar, os.path.join(css_path, 'progressbar.css'))
         self.widgets.append(progressBar)
         return progressBar
 
     def addLabel(self, text, objectName=""):
         label = QtGui.QLabel(text, self)
         label.setObjectName(objectName)
-        load_css_for_widget(label, css_path + "label.css")
+        load_css_for_widget(label, os.path.join(css_path, 'label.css'))
         self.widgets.append(label)
         return label
 
@@ -133,7 +135,7 @@ class VerticalContainer(QtGui.QWidget):
         comboBox.opened.connect(onClick)
         comboBox.resized.connect(self.centerWidgets)
         comboBox.setSizeAdjustPolicy(QtGui.QComboBox.AdjustToContents)
-        load_css_for_widget(comboBox, css_path + "combobox.css")
+        load_css_for_widget(comboBox, os.path.join(css_path, 'combobox.css'), images_path)
         self.widgets.append(comboBox)
         return comboBox
 
@@ -141,6 +143,11 @@ class VerticalContainer(QtGui.QWidget):
         spacer = QtGui.QWidget(self)
         spacer.resize(self.width(), height)
         self.widgets.append(spacer)
+
+    # @Override
+    # This method is called automatically when the widget is displayed with show()
+    def showEvent(self, event):
+        self.centerWidgets()
 
     # It centers all vertically added widgets, in this container, horizontally
     def centerWidgets(self):
@@ -157,8 +164,3 @@ class VerticalContainer(QtGui.QWidget):
             current_height += spacing
             widget.move((self.width() - widget.width()) / 2, current_height)
             current_height += widget.height()
-
-    # @Override
-    # This method is called automatically when the widget is displayed with show()
-    def showEvent(self, event):
-        self.centerWidgets()

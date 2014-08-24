@@ -10,7 +10,8 @@
 import time
 import subprocess
 from src.common.errors import BURN_ERROR
-from src.common.utils import debugger, _7zip_path, _dd_path, BYTES_IN_MEGABYTE
+from src.common.utils import debugger, BYTES_IN_MEGABYTE
+from src.common.paths import _7zip_path, _dd_path
 
 
 # used to calculate burning speed
@@ -30,8 +31,11 @@ def start_burn_process(path, os_info, disk, report_progress_ui):
 
 
 def burn_kano_os(os_path, disk, size, report_progress_ui):
-    cmd = '"{}7za.exe" e -so "{}" | "{}dd.exe" of="{}" bs=4M --progress'.format(_7zip_path, os_path, _dd_path, disk)
-    process = subprocess.Popen(cmd, shell=True, stderr=subprocess.PIPE, universal_newlines=True)
+    cmd = '"{}\\7za.exe" e -so "{}" | "{}\\dd.exe" of="{}" bs=4M --progress'.format(_7zip_path, os_path, _dd_path, disk)
+    # all handles (in, out, err) need to be set due to PyInstaller bundling
+    process = subprocess.Popen(cmd, shell=True, universal_newlines=True,
+                               stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
     failed = False
 
     # initialise UI timed reporting

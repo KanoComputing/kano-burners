@@ -23,7 +23,7 @@ QComboBox::drop-down {
     min-width: 44px;
     border: 0px;
 
-    image: url("res/images/arrow.png");
+    image: url("{res_path}arrow.png");
 }
 
 /* Styling of the popup menu */

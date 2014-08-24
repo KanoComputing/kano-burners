@@ -15,16 +15,6 @@ from urllib2 import urlopen
 from PyQt4 import QtCore
 
 
-# Paths used throughout the project
-res_path = "res/"
-images_path = res_path + "images/"
-css_path = res_path + "CSS/"
-win_tools_path = "win\\"
-_7zip_path = win_tools_path + "7zip\\"
-_dd_path = win_tools_path + "dd\\"
-_nircmd_path = win_tools_path + "nircmd\\"
-
-
 # Conversion constants
 BYTES_IN_MEGABYTE = 1048576
 BYTES_IN_GIGABYTE = 1073741824
@@ -60,7 +50,8 @@ def restore_signals():
 
 # used on Windows as there is no support for 'preexec_fn'
 def run_cmd_no_pipe(cmd):
-    process = subprocess.Popen(cmd, shell=True,
+    # all handles (in, out, err) need to be set due to PyInstaller bundling
+    process = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     stdout, stderr = process.communicate()
@@ -108,9 +99,26 @@ def is_internet():
 
 # This method is used to set CSS styling
 # for a given widget from a given CSS file
-def load_css_for_widget(widget, css_path):
+def load_css_for_widget(widget, css_path, res_path=''):
     css = QtCore.QFile(css_path)
     css.open(QtCore.QIODevice.ReadOnly)
     if css.isOpen():
-        widget.setStyleSheet(QtCore.QVariant(css.readAll()).toString())
+        style_sheet = str(QtCore.QVariant(css.readAll()).toString())
+
+        if res_path:
+            style_sheet_to_format = style_sheet
+            style_sheet = ''
+
+            for line in style_sheet_to_format.splitlines():
+                try:
+                    line = line.format(res_path=os.path.join(res_path, '').replace('\\', '/'))
+                except ValueError:
+                    pass
+                except Exception:
+                    debugger('[ERROR] Formatting CSS file {} failed on line "{}"'
+                             .format(css_path, line))
+
+                style_sheet += line + '\n'
+
+        widget.setStyleSheet(style_sheet)
     css.close()

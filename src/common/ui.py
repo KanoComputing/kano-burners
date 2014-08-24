@@ -7,9 +7,11 @@
 # [File description]
 
 
+import os
 from PyQt4 import QtGui
 from src.common.widgets import VerticalContainer
-from src.common.utils import load_css_for_widget, images_path, css_path
+from src.common.utils import load_css_for_widget
+from src.common.paths import images_path, css_path
 
 
 APP_WIDTH = 500
@@ -65,10 +67,10 @@ class UI(QtGui.QWidget):
         self.setPalette(palette)
 
         # adding the 3 items to the application container
-        self.container.addImage(images_path + "header.png")
+        self.container.addImage(os.path.join(images_path, 'header.png'))
         self.container.addSpacer(CONTAINER_HEIGHT)
         footer = self.container.addLabel("Questions? help@kano.me", objectName=LABEL_CSS_FOOTER)
-        load_css_for_widget(footer, css_path + "label.css")
+        load_css_for_widget(footer, os.path.join(css_path, 'label.css'))
 
     def createScreens(self):
         self.introScreen = self.createIntroScreen(0, 120)

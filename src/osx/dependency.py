@@ -51,9 +51,9 @@ def is_gzip_installed():
     return return_code == 0
 
 
-def is_sufficient_space(path, requred_mb):
+def is_sufficient_space(path, required_mb):
     cmd = "df -m %s | grep -v 'Available' | awk '{print $4}'" % path
     free_space, _, _ = run_cmd(cmd)
 
     debugger('Free space {} MB in {}'.format(free_space.strip(), path))
-    return int(free_space.strip()) > requred_mb
+    return int(free_space.strip()) > required_mb

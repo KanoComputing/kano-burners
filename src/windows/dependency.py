@@ -6,13 +6,15 @@
 #
 # [File description]
 
+
 import os
 import sys
+import win32con
 import win32com.shell.shell as shell
 
 from src.common.errors import INTERNET_ERROR, ARCHIVER_ERROR, FREE_SPACE_ERROR
-from src.common.utils import run_cmd_no_pipe, is_internet, debugger, \
-    _7zip_path, _dd_path, _nircmd_path, BYTES_IN_MEGABYTE
+from src.common.utils import run_cmd_no_pipe, is_internet, debugger, BYTES_IN_MEGABYTE
+from src.common.paths import _7zip_path, _dd_path, _nircmd_path
 
 
 # TODO: grab this value with pySmartDL
@@ -25,7 +27,8 @@ def request_admin_privileges():
     if sys.argv[-1] != ASADMIN:
         script = os.path.abspath(sys.argv[0])
         params = ' '.join([script] + sys.argv[1:] + [ASADMIN])
-        shell.ShellExecuteEx(lpVerb='runas', lpFile=sys.executable, lpParameters=params, nShow=5)
+        shell.ShellExecuteEx(lpVerb='runas', lpFile=sys.executable,
+                             lpParameters=params, nShow=win32con.SW_SHOW)
         sys.exit(0)
 
 
@@ -58,34 +61,17 @@ def check_dependencies(tmp_dir):
 
 def is_tools_preset():
     # the tools necessary are included in win\ folder
-    found_7zip = is_file_present(_7zip_path, "7za.exe")
-    found_dd = is_file_present(_dd_path, "dd.exe")
-    found_nircmd = is_file_present(_nircmd_path, "nircmd.exe")
+    found_7zip = os.path.exists(os.path.join(_7zip_path, "7za.exe"))
+    found_dd = os.path.exists(os.path.join(_dd_path, "dd.exe"))
+    found_nircmd = os.path.exists(os.path.join(_nircmd_path, "nircmd.exe"))
 
     # return whether we have found both
     return found_7zip and found_dd and found_nircmd
 
 
-def is_file_present(path, filename):
+def is_sufficient_space(path, required_mb):
     cmd = "dir {}".format(path)
-    output, error, return_code = run_cmd_no_pipe(cmd)
-
-    found = False
-    if not return_code:
-        for line in output.splitlines():
-            if filename in line:
-                found = True
-                break
-
-    if found:
-        debugger("Found {} in {}".format(filename, path))
-    else:
-        debugger("[ERROR] Could not find {} in {}".format(filename, path))
-    return found
-
-
-def is_sufficient_space(path, requred_mb):
-    cmd = "dir {}".format(path)
+    debugger(cmd)
     output, _, _ = run_cmd_no_pipe(cmd)
 
     # grab the last line from the output
@@ -95,4 +81,4 @@ def is_sufficient_space(path, requred_mb):
     free_space_mb = float(free_space_line.split()[2].replace(',', '')) / BYTES_IN_MEGABYTE
 
     debugger('Free space {} MB in {}'.format(free_space_mb, path))
-    return free_space_mb > requred_mb
+    return free_space_mb > required_mb

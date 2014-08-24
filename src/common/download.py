@@ -40,13 +40,9 @@ def download_kano_os(path, report_progress_ui):
     if not os_info:
         return None, DOWNLOAD_ERROR
 
-    # give the server some time to breath between requests
-    time.sleep(1)
-
     # the documentation is misleading - if non blocking mode is used,
     # pySmartDL may still throw exceptions
     try:
-        #downloader = SmartDL(TEST2_URL, dest=path, progress_bar=False)
         downloader = Downloader(os_info['url'], dest=path, progress_bar=False)
         # simply make sure the file was not corrupted - not for cryptographic security
         downloader.add_hash_verification('md5', os_info['compressed_md5'])
@@ -101,6 +97,9 @@ def get_latest_os_info():
         # use the url for the latest os version to get info about the image
         response = urllib2.urlopen(latest_json['url'] + '.json')
         os_json = json.load(response)
+
+        # give the server some time to breath between requests
+        time.sleep(1)
 
     except:
         debugger('[ERROR] downloading OS info failed!')
