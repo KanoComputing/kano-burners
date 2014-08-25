@@ -19,7 +19,7 @@ from src.common.errors import BURN_ERROR
 def start_burn_process(path, os_info, disk, report_progress_ui):
 
     # Set the progress to 0% on the UI progressbar, and write what we're up to
-    report_progress_ui(0, 'preparing to download OS image..')
+    report_progress_ui(0, 'preparing to burn OS image..')
 
     # since a thread cannot return, use this queue to add the return boolean
     thread_output = Queue.Queue()

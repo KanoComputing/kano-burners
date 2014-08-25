@@ -35,6 +35,9 @@ class Downloader(SmartDL):
 
 def download_kano_os(path, report_progress_ui):
 
+    # set the progress to 0% on the UI progressbar, and write what we're up to
+    report_progress_ui(0, 'preparing to download OS image..')
+
     # get information about the latest OS version e.g. url, filename, md5 checksum
     os_info = get_latest_os_info()
     if not os_info:

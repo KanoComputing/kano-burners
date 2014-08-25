@@ -19,6 +19,10 @@ last_written_mb = 0
 
 
 def start_burn_process(path, os_info, disk, report_progress_ui):
+
+    # Set the progress to 0% on the UI progressbar, and write what we're up to
+    report_progress_ui(0, 'preparing to burn OS image..')
+
     # the Windows version of dd can easily output writing progress, unlike OSX and Linux
     # so we do not need multithreading and progress polling
     successful = burn_kano_os(path + os_info['filename'], disk,

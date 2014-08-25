@@ -7,6 +7,9 @@
 # [File description]
 
 
+import os
+import sys
+
 from src.common.utils import run_cmd, is_internet, debugger
 from src.common.errors import INTERNET_ERROR, ARCHIVER_ERROR, FREE_SPACE_ERROR
 
@@ -16,8 +19,14 @@ REQUIRED_MB = 600  # MB necessary free space
 
 
 def request_admin_privileges():
-    # TODO
-    pass
+    ask_sudo_osascript = """' \
+        do shell script "{}" \
+            with administrator privileges \
+    '""".format(os.path.abspath(sys.argv[0]).replace(' ', '\\\\ '))
+
+    if os.getuid() != 0:
+        os.system("""osascript -e {}""".format(ask_sudo_osascript))
+        sys.exit(0)
 
 
 def check_dependencies(tmp_dir):
