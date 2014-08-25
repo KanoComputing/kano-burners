@@ -48,6 +48,8 @@ class ComboBox(QtGui.QComboBox):
     # @Override
     def resizeEvent(self, event):
         self.resized.emit()
+        dropdown = self.view()
+        dropdown.setMinimumWidth(self.width())
         return super(ComboBox, self).resizeEvent(event)
 
     # @Override
@@ -84,9 +86,7 @@ class MultistageProgressBar(QtGui.QProgressBar):
     # @Override
     def setValue(self, progress):
         # a simplistic approach to check if a new process is reporting its progress
-        # NOTE: it assumes that the current process is near completion
-        #       if the current process is too fast, adjust this value
-        if self.current_stage_progress > progress and self.current_stage_progress > 98:
+        if self.current_stage_progress > progress:
             self.stages_completed += 1
 
         # calculate the overall progress

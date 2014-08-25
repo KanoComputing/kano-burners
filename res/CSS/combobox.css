@@ -28,6 +28,5 @@ QComboBox::drop-down {
 
 /* Styling of the popup menu */
 QComboBox QAbstractItemView {
-    min-width: 310px;
     background-color: white;
 }
