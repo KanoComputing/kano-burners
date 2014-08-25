@@ -724,7 +724,7 @@ def _calc_chunk_size(filesize, threads, minChunkFile):
 
     return args
 
-def download(url, dest, startByte=0, endByte=None, headers=None, timeout=4, shared_var=None, thread_shared_cmds=None, logger=None, retries=3):
+def download(url, dest, startByte=0, endByte=None, headers=None, timeout=4, shared_var=None, thread_shared_cmds=None, logger=None, retries=1):
     "The basic download function that runs at each thread."
     logger = logger or utils.DummyLogger()
     if not headers:
