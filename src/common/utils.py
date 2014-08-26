@@ -16,9 +16,9 @@ from PyQt4 import QtCore
 
 
 # Conversion constants
-BYTES_IN_MEGABYTE = 1048576
-BYTES_IN_GIGABYTE = 1073741824
-BYTES_IN_GIBIBYTE = 1000000000
+# technically, gigabyte=1000^3 and gibibyte=1024^3 - here, the difference matters
+BYTES_IN_MEGABYTE = 1000000
+BYTES_IN_GIGABYTE = 1000000000
 
 
 # The URL used to download information about the lastest OS release
@@ -122,3 +122,18 @@ def load_css_for_widget(widget, css_path, res_path=''):
 
         widget.setStyleSheet(style_sheet)
     css.close()
+
+
+def calculate_eta(progress, total, speed):
+    eta_seconds = float(total - progress) / (speed + 1)
+
+    hours = int(eta_seconds / 3600)
+    minutes = int(eta_seconds / 60 - hours * 60)
+    seconds = int(eta_seconds % 60)
+
+    if hours:
+        return '{} hours, {} minutes, {} seconds'.format(hours, minutes, seconds)
+    elif minutes:
+        return '{} minutes, {} seconds'.format(minutes, seconds)
+    else:
+        return '{} seconds'.format(seconds)

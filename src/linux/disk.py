@@ -7,7 +7,7 @@
 # [File description]
 
 
-from src.common.utils import run_cmd, debugger, BYTES_IN_GIBIBYTE
+from src.common.utils import run_cmd, debugger, BYTES_IN_GIGABYTE
 
 
 def get_disks_list():
@@ -30,12 +30,12 @@ def get_disks_list():
             'size': disk_sizes[index]
         }
 
-        # make sure we do not list any potential hard drive
-        if disk['size'][len(disk['size']) - 2:] != 'GB' or float(disk['size'][:-2]) > 64:
+        # make sure we do not list any potential hard drive or too small SD card
+        if disk['size'] < 4 or disk['size'] > 64:  # GB
             debugger('Ignoring {}'.format(disk))
         else:
-            disks.append(disk)
             debugger('Listing {}'.format(disk))
+            disks.append(disk)
 
     return disks
 
@@ -75,8 +75,7 @@ def get_disk_sizes():
 
     disk_sizes = []
     for size in output.splitlines():
-        size_gb = float(size) / BYTES_IN_GIBIBYTE
-        disk_sizes.append('{0:.2f} GB'.format(size_gb))
+        disk_sizes.append(float(size) / BYTES_IN_GIGABYTE)
 
     if return_code:
         debugger('[ERROR] ' + error.strip('\n'))

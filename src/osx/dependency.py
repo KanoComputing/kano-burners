@@ -10,8 +10,8 @@
 import os
 import sys
 
-from src.common.utils import run_cmd, is_internet, debugger
-from src.common.errors import INTERNET_ERROR, ARCHIVER_ERROR, FREE_SPACE_ERROR
+from src.common.utils import run_cmd, is_internet, debugger, BYTES_IN_MEGABYTE
+from src.common.errors import INTERNET_ERROR, TOOLS_ERROR, FREE_SPACE_ERROR
 
 
 # TODO: grab this value with pySmartDL
@@ -37,12 +37,12 @@ def check_dependencies(tmp_dir):
         debugger('No internet connection found')
         return INTERNET_ERROR
 
-    # looking for a suitable archiver tool
-    if is_gzip_installed():
-        debugger('Gzip is installed')
+    # checking all necessary tools are installed
+    if verify_tools():
+        debugger('All necessary tools have been found')
     else:
-        debugger('Gzip is not installed')
-        return ARCHIVER_ERROR
+        debugger('[ERROR] Not all tools are present')
+        return TOOLS_ERROR
 
     # making sure we have enough space to download OS
     if is_sufficient_space(tmp_dir, REQUIRED_MB):
@@ -55,14 +55,42 @@ def check_dependencies(tmp_dir):
     return None
 
 
-def is_gzip_installed():
-    _, _, return_code = run_cmd('which gzip')
-    return return_code == 0
+def verify_tools():
+    tools = """
+        awk
+        dd
+        df
+        diskutil
+        grep
+        gzip
+        kill
+        pgrep
+    """
+
+    # return whether we have found all tools
+    return is_installed(tools.split())
+
+
+def is_installed(programs_list):
+    cmd = 'which {}'.format(' '.join(programs_list))
+    output, error, return_code = run_cmd(cmd)
+
+    if return_code:
+        debugger('[ERROR] ' + error.strip('\n'))
+        return True  # if something goes wrong here, it shouldn't be catastrophic
+
+    return len(output.split()) == len(programs_list)
 
 
 def is_sufficient_space(path, required_mb):
-    cmd = "df -m %s | grep -v 'Available' | awk '{print $4}'" % path
-    free_space, _, _ = run_cmd(cmd)
+    cmd = "df %s | grep -v 'Available' | awk '{print $4}'" % path
+    output, _, _ = run_cmd(cmd)
 
-    debugger('Free space {} MB in {}'.format(free_space.strip(), path))
-    return int(free_space.strip()) > required_mb
+    try:
+        free_space_mb = float(output.strip()) * 512 / BYTES_IN_MEGABYTE
+    except:
+        debugger('[ERROR] Failed parsing the line ' + output)
+        return True
+
+    debugger('Free space {0:.2f} MB in {1}'.format(free_space_mb, path))
+    return free_space_mb > required_mb

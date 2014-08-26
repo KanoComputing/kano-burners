@@ -10,7 +10,7 @@
 import time
 import subprocess
 from src.common.errors import BURN_ERROR
-from src.common.utils import debugger, BYTES_IN_MEGABYTE
+from src.common.utils import calculate_eta, debugger, BYTES_IN_MEGABYTE
 from src.common.paths import _7zip_path, _dd_path
 
 
@@ -41,6 +41,7 @@ def burn_kano_os(os_path, disk, size, report_progress_ui):
                                stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
     failed = False
+    unparsed_line = ''
 
     # initialise UI timed reporting
     previous_timestamp = time.time()
@@ -55,19 +56,23 @@ def burn_kano_os(os_path, disk, size, report_progress_ui):
         # and making sure we report to UI at fixed time intervals, not like dd
         elapsed_seconds = time.time() - previous_timestamp
 
-        if line and line[-1] == 'M' and elapsed_seconds > 0.3:
-            total_written_mb = float(line.strip('M').replace(',', ''))
+        try:
+            if line and line[-1] == 'M' and elapsed_seconds > 0.3:
+                total_written_mb = float(line.strip('M').replace(',', ''))
 
-            # calculate stats to be reported to UI
-            progress = int(total_written_mb / (size / BYTES_IN_MEGABYTE) * 100)
-            speed = calculate_speed(total_written_mb, elapsed_seconds)
-            eta = calculate_eta(total_written_mb, size / BYTES_IN_MEGABYTE, speed)
+                # calculate stats to be reported to UI
+                progress = int(total_written_mb / (size / BYTES_IN_MEGABYTE) * 100)
+                speed = calculate_speed(total_written_mb, elapsed_seconds)
+                eta = calculate_eta(total_written_mb, size / BYTES_IN_MEGABYTE, speed)
 
-            report_progress_ui(progress, 'speed {0:.2f} MB/s  eta {1:s}  completed {2:d}%'
-                               .format(speed, eta, progress))
+                report_progress_ui(progress, 'speed {0:.2f} MB/s  eta {1:s}  completed {2:d}%'
+                                   .format(speed, eta, progress))
 
-            # update the time at which we last reported with the current time
-            previous_timestamp = time.time()
+                # update the time at which we last reported with the current time
+                previous_timestamp = time.time()
+
+        except:
+            unparsed_line = line
 
         # watch out for an error output from dd
         if 'error' in line.lower() or 'invalid' in line.lower():
@@ -75,10 +80,15 @@ def burn_kano_os(os_path, disk, size, report_progress_ui):
             failed = True
 
     # make sure the progress bar is filled and show an appropriate message
+    # if we failed, the UI will immediately show the error screen
     report_progress_ui(100, 'burning finished successfully')
 
+    # making sure we log anything nasty that has happened
+    if unparsed_line:
+        debugger('[ERROR] Failed parsing the line: ' + unparsed_line)
+
     if failed:
-        debugger('[ERROR] burning Kano image failed')
+        debugger('[ERROR] Burning Kano image failed')
         return False
     else:
         debugger('Burning successfully finished')
@@ -94,18 +104,3 @@ def calculate_speed(total_written_mb, elapsed_seconds):
 
     # return the speed as MB/s
     return float(newly_written_mb) / elapsed_seconds
-
-
-def calculate_eta(progress, total, speed):
-    eta_seconds = float(total - progress) / (speed + 1)
-
-    hours = int(eta_seconds / 3600)
-    minutes = int(eta_seconds / 60 - hours * 60)
-    seconds = int(eta_seconds % 60)
-
-    if hours:
-        return '{} hours, {} minutes, {} seconds'.format(hours, minutes, seconds)
-    elif minutes:
-        return '{} minutes, {} seconds'.format(minutes, seconds)
-    else:
-        return '{} seconds'.format(seconds)

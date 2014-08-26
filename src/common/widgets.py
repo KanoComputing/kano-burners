@@ -30,7 +30,7 @@ class ComboBox(QtGui.QComboBox):
 
     # these signals are emitted when the user clicks the
     # widget and the popup list is shown or closed
-    opened = QtCore.pyqtSignal()
+    clicked = QtCore.pyqtSignal()
     resized = QtCore.pyqtSignal()
 
     def __init__(self, parent, defaultItem=None):
@@ -54,7 +54,7 @@ class ComboBox(QtGui.QComboBox):
 
     # @Override
     def mousePressEvent(self, event):
-        self.opened.emit()
+        self.clicked.emit()
         return super(ComboBox, self).mousePressEvent(event)
 
     # @Override
@@ -132,7 +132,7 @@ class VerticalContainer(QtGui.QWidget):
 
     def addComboBox(self, onClick, defaultItem=None):
         comboBox = ComboBox(self, defaultItem)
-        comboBox.opened.connect(onClick)
+        comboBox.clicked.connect(onClick)
         comboBox.resized.connect(self.centerWidgets)
         comboBox.setSizeAdjustPolicy(QtGui.QComboBox.AdjustToContents)
         load_css_for_widget(comboBox, os.path.join(css_path, 'combobox.css'), images_path)

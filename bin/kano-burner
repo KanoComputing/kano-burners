@@ -68,17 +68,10 @@ elif platform.system() == 'Windows':
 
 class BurnerGUI(UI):
 
-    def __init__(self):
-        super(BurnerGUI, self).__init__()
-
     def onStart(self):
         # make the temp directory to hold the downloaded image
         debugger('Making temp directory')
         make_dir(TEMP_DIR)
-
-        # TODO: check root
-        # debugger('Making sure program was ran with sudo')
-        # enforce_root("You need to run this program as root.")
 
         # check if dependencies are met
         debugger('Checking for dependencies..')
@@ -98,7 +91,7 @@ class BurnerGUI(UI):
 
         # add the disks to the dropdown menu
         for disk in self.disks:
-            self.disksComboBox.addItem('{}, {}'.format(disk['name'], disk['size']))
+            self.disksComboBox.addItem('{0}, {1:.2f} GB'.format(disk['name'], disk['size']))
 
     def onStartClick(self):
         # the button is disabled until the user selects a disk - we can safely proceed

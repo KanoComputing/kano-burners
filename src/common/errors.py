@@ -13,11 +13,11 @@ INTERNET_ERROR = {
 }
 FREE_SPACE_ERROR = {
     'title': 'Insufficient available space..',
-    'description': 'Please ensure you have at least 3.2GB available space locally'
+    'description': 'Please ensure you have at least 600 MB available space locally'
 }
-ARCHIVER_ERROR = {
-    'title': 'Missing archiver tool..',
-    'description': 'No archiver tool found to decompress image'
+TOOLS_ERROR = {
+    'title': 'Missing some tools..',
+    'description': 'Please visit the dependency page for more information'
 }
 NO_DISKS_ERROR = {
     'title': 'SD Card not found..',

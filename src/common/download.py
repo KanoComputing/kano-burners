@@ -52,11 +52,13 @@ def download_kano_os(path, report_progress_ui):
         downloader.start(blocking=False)
 
     except KeyError:
-        debugger('[ERROR] the server returned an unsupported json key')
-        traceback.print_exc()
+        debugger('[ERROR] Server returned an unsupported json key')
+        debugger(traceback.format_exc())
         return None, DOWNLOAD_ERROR
     except:
-        pass
+        debugger('[ERROR] pySmartDL has crashed')
+        debugger(traceback.format_exc())
+        return None, DOWNLOAD_ERROR
 
     # the downloader is running separate threads so here we wait for the
     # process to finish and call the UI function which reports the process
@@ -77,11 +79,11 @@ def download_kano_os(path, report_progress_ui):
         # look through the errors that occured and report an MD5 error
         for error in downloader.get_errors():
             if isinstance(error, HashFailedException):
-                debugger('[ERROR] md5 verification failed')
+                debugger('[ERROR] MD5 verification failed')
                 return None, MD5_ERROR
 
         # for any other errors, report a general message
-        debugger('[ERROR] downloading Kano image failed')
+        debugger('[ERROR] Downloading Kano image failed')
         return None, DOWNLOAD_ERROR
 
 
@@ -94,18 +96,19 @@ def get_latest_os_info():
         response = urllib2.urlopen(LATEST_OS_INFO_URL)
         latest_json = json.load(response)
 
-        # give the server some time to breath between requests
+        # give the server some time to breathe between requests
+        debugger('Latest Kano OS image is {}'.format(latest_json['filename']))
         time.sleep(1)
 
         # use the url for the latest os version to get info about the image
         response = urllib2.urlopen(latest_json['url'] + '.json')
         os_json = json.load(response)
 
-        # give the server some time to breath between requests
+        # give the server some time to breathe between requests
         time.sleep(1)
 
     except:
-        debugger('[ERROR] downloading OS info failed!')
+        debugger('[ERROR] Downloading OS info failed')
         return None
 
     # merge the two jsons and return a single info dict result

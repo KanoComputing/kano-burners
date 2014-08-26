@@ -12,9 +12,9 @@ import sys
 import win32con
 import win32com.shell.shell as shell
 
-from src.common.errors import INTERNET_ERROR, ARCHIVER_ERROR, FREE_SPACE_ERROR
 from src.common.utils import run_cmd_no_pipe, is_internet, debugger, BYTES_IN_MEGABYTE
 from src.common.paths import _7zip_path, _dd_path, _nircmd_path
+from src.common.errors import INTERNET_ERROR, TOOLS_ERROR, FREE_SPACE_ERROR
 
 
 # TODO: grab this value with pySmartDL
@@ -41,11 +41,11 @@ def check_dependencies(tmp_dir):
         return INTERNET_ERROR
 
     # making sure the tools folder is there
-    if is_tools_preset():
+    if verify_tools():
         debugger('All necessary tools have been found')
     else:
-        debugger('[ERROR] Not all tools are present!')
-        return ARCHIVER_ERROR
+        debugger('[ERROR] Not all tools are present')
+        return TOOLS_ERROR
 
     # making sure we have enough space to download OS
     if is_sufficient_space(tmp_dir, REQUIRED_MB):
@@ -59,25 +59,50 @@ def check_dependencies(tmp_dir):
     return None
 
 
-def is_tools_preset():
+def verify_tools():
     # the tools necessary are included in win\ folder
     found_7zip = os.path.exists(os.path.join(_7zip_path, "7za.exe"))
     found_dd = os.path.exists(os.path.join(_dd_path, "dd.exe"))
     found_nircmd = os.path.exists(os.path.join(_nircmd_path, "nircmd.exe"))
 
-    # return whether we have found both
-    return found_7zip and found_dd and found_nircmd
+    tools = """
+        diskpart
+        wmic
+    """
+
+    # return whether we have found all tools
+    return found_7zip and found_dd and found_nircmd and is_installed(tools.split())
+
+
+def is_installed(programs_list):
+    cmd = 'where.exe {}'.format(' '.join(programs_list))
+    output, error, return_code = run_cmd_no_pipe(cmd)
+
+    if return_code:
+        debugger('[ERROR] ' + error.strip('\n'))
+        return True  # if something goes wrong here, it shouldn't be catastrophic
+
+    programs_found = 0
+    for line in output.splitlines():
+        if line and 'not find' not in line:
+            programs_found += 1
+
+    return programs_found == len(programs_list)
 
 
 def is_sufficient_space(path, required_mb):
     cmd = "dir {}".format(path)
     output, _, _ = run_cmd_no_pipe(cmd)
 
-    # grab the last line from the output
-    free_space_line = output.splitlines()[-1]
+    try:
+        # grab the last line from the output
+        free_space_line = output.splitlines()[-1]
 
-    # grab the number in bytes, remove comma delimiters, and convert to MB
-    free_space_mb = float(free_space_line.split()[2].replace(',', '')) / BYTES_IN_MEGABYTE
+        # grab the number in bytes, remove comma delimiters, and convert to MB
+        free_space_mb = float(free_space_line.split()[2].replace(',', '')) / BYTES_IN_MEGABYTE
+    except:
+        debugger('[ERROR] Failed parsing the line ' + output)
+        return True
 
-    debugger('Free space {} MB in {}'.format(free_space_mb, path))
+    debugger('Free space {0:.2f} MB in {1}'.format(free_space_mb, path))
     return free_space_mb > required_mb

@@ -7,12 +7,12 @@
 # [File description]
 
 
-import subprocess
-import threading
+import time
 import Queue
+import threading
+import subprocess
 
-from time import sleep
-from src.common.utils import run_cmd, debugger, BYTES_IN_MEGABYTE
+from src.common.utils import run_cmd, calculate_eta, debugger, BYTES_IN_MEGABYTE
 from src.common.errors import BURN_ERROR
 
 
@@ -47,41 +47,53 @@ def start_burn_process(path, os_info, disk, report_progress_ui):
 def burn_kano_os(path, disk, size, return_queue, report_progress_ui):
     cmd = 'gzip -dc {} | dd of={} bs=4m'.format(path, disk)
     process = subprocess.Popen(cmd, shell=True, stderr=subprocess.PIPE)
+
     failed = False
+    unparsed_line = ''
 
     # as long as Popen is running, read it's stderr line by line
     # each time an INFO signal is sent to dd, it outputs 3 lines
     # and we are only interested in the last one i.e. 'x bytes written in y seconds'
     for line in iter(process.stderr.readline, ''):
         if 'bytes' in line:
-            parts = line.split()
+            try:
+                parts = line.split()
 
-            written_bytes = float(parts[0])
-            progress = int(written_bytes / size * 100)
+                written_bytes = float(parts[0])
+                progress = int(written_bytes / size * 100)
 
-            speed = float(parts[6][1:]) / BYTES_IN_MEGABYTE
+                speed = float(parts[6][1:]) / BYTES_IN_MEGABYTE
 
-            eta = calculate_eta(written_bytes, size, int(parts[6][1:]))
+                eta = calculate_eta(written_bytes, size, int(parts[6][1:]))
 
-            report_progress_ui(progress, 'speed {0:.2f} MB/s  eta {1:s}  completed {2:d}%'
-                               .format(speed, eta, progress))
+                report_progress_ui(progress, 'speed {0:.2f} MB/s  eta {1:s}  completed {2:d}%'
+                                   .format(speed, eta, progress))
+            except:
+                unparsed_line = line
 
         # watch out for an error output from dd
-        if 'error' in line or 'invalid' in line:
+        if 'error' in line.lower() or 'invalid' in line.lower():
+            debugger('[ERROR] ' + line)
             failed = True
 
+    # make sure the progress bar is filled and show an appropriate message
+    # if we failed, the UI will immediately show the error screen
+    report_progress_ui(100, 'burning finished successfully')
+
+    # making sure we log anything nasty that has happened
+    if unparsed_line:
+        debugger('[ERROR] Failed parsing the line: ' + unparsed_line)
+
     if failed:
-        debugger('[ERROR] burning Kano image failed')
+        debugger('[ERROR] Burning Kano image failed')
         return_queue.put(False)
-        return False
     else:
         debugger('Burning successfully finished')
         return_queue.put(True)
-        return True
 
 
 def poll_burning_thread(thread):
-    sleep(1)
+    time.sleep(1)
     debugger('Polling burner for progress..')
     cmd = 'kill -INFO `pgrep ^dd`'
 
@@ -90,22 +102,7 @@ def poll_burning_thread(thread):
     while thread.is_alive():
         _, error, return_code = run_cmd(cmd)
         if return_code:
-            debugger('[ERROR] sending signal to burning thread failed')
+            debugger('[ERROR] Sending signal to burning thread failed')
             return False
-        sleep(0.3)
+        time.sleep(0.3)
     return True
-
-
-def calculate_eta(progress, total, speed):
-    eta_seconds = float(total - progress) / (speed + 1)
-
-    hours = int(eta_seconds / 3600)
-    minutes = int(eta_seconds / 60 - hours * 60)
-    seconds = int(eta_seconds % 60)
-
-    if hours:
-        return '{} hours, {} minutes, {} seconds'.format(hours, minutes, seconds)
-    elif minutes:
-        return '{} minutes, {} seconds'.format(minutes, seconds)
-    else:
-        return '{} seconds'.format(seconds)

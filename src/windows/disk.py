@@ -7,7 +7,7 @@
 # [File description]
 
 
-from src.common.utils import run_cmd_no_pipe, write_file_contents, debugger, BYTES_IN_GIBIBYTE
+from src.common.utils import run_cmd_no_pipe, write_file_contents, debugger, BYTES_IN_GIGABYTE
 from src.common.paths import _dd_path, _nircmd_path
 
 
@@ -15,9 +15,7 @@ def get_disks_list():
     disks = list()
 
     cmd = "wmic diskdrive get deviceid, model, size /format:list"
-    debugger('get_disks_list(): cmd = ' + cmd)
     output, error, return_code = run_cmd_no_pipe(cmd)
-    debugger('get_disks_list(): output = ' + output)
 
     if return_code:
         debugger('[ERROR] ' + error.strip('\n'))
@@ -28,21 +26,21 @@ def get_disks_list():
     for index in range(0, len(output_lines)):
         if output_lines[index].startswith("DeviceID="):
 
-            # grab the disk id from e.g. \\.\PHYSICALDRIVE0 and use Partition0
+            # grab the disk id from e.g. \\.\PHYSICALDRIVE[0] and use Partition0
             # which for dd is the entire disk
             id = output_lines[index].split('=')[1][-1]
             disk_id = "\\\\?\\Device\\Harddisk{}\\Partition0".format(id)
 
             # for the disk model, remove the last word which is always 'device'
             model = output_lines[index + 1].split('=')[1]
-            disk_name = ' '.join(model.split()[1:-1])
+            disk_name = ' '.join(model.split()[:-1])
 
             # the size may not be listed (i.e. ''), in which case we assume
             # the device is not plugged in e.g. an empty USB SD card reader
             disk_size = -1
             try:
                 size_bytes = float(output_lines[index + 2].split('=')[1])
-                disk_size = size_bytes / BYTES_IN_GIBIBYTE
+                disk_size = size_bytes / BYTES_IN_GIGABYTE
             except:
                 pass
 
@@ -53,13 +51,12 @@ def get_disks_list():
                 'size': disk_size
             }
 
-            # make sure we do not list any potential hard drive
-            if disk['size'] > 64 or disk['size'] == -1:
+            # make sure we do not list any potential hard drive or too small SD card
+            if disk['size'] < 4 or disk['size'] > 64 or disk['size'] == -1:
                 debugger('Ignoring {}'.format(disk))
             else:
-                disk['size'] = '{0:.2f} GB'.format(disk['size'])
-                disks.append(disk)
                 debugger('Listing {}'.format(disk))
+                disks.append(disk)
 
     return disks
 
@@ -68,7 +65,8 @@ def prepare_disk(disk_id, report_ui):
     # Windows magic
 
     report_ui('retrieving mount point and disk volume..')
-    disk_mount, disk_volume = get_disk_volume_and_mount(disk_id)
+    disk_mount = get_disk_mount(disk_id)
+    # disk_volume = get_disk_volume(disk_id, disk_mount)
 
     report_ui('closing all Explorer windows')
     close_all_explorer_windows()
@@ -86,16 +84,16 @@ def prepare_disk(disk_id, report_ui):
     # dd should have no trouble to write the OS to Partition0
 
 
-def get_disk_volume_and_mount(disk_id):
+def get_disk_mount(disk_id):
     TEMP_DIR = 'C:\\temp\\kano-burner\\'
     disk_mount = ''   # mount point e.g. C:\ or D:\
-    disk_volume = ''  # a unique ID e.g. \\?\Volume{5fd765ff-068e-11e4-bc8d-806e6f6e6963}\
 
-    # create a diskpart script to find the mount point for the given disk
-    # below we also extract the id of the physical disk, required by diskpart
+    # extract the id of the physical disk, required by diskpart
     # e.g. \\?\Device\Harddisk[id]\Partition0
     id = int(disk_id.split("Harddisk")[1][0])  # access by string index alone is dangerous!
-    diskpart_detail_script = 'select disk {}\n'.format(id) + 'detail disk'
+
+    # create a diskpart script to find the mount point for the given disk
+    diskpart_detail_script = 'select disk {} \ndetail disk'.format(id)
     write_file_contents(TEMP_DIR + "detail_disk.txt", diskpart_detail_script)
 
     # run the created diskpart script
@@ -111,15 +109,16 @@ def get_disk_volume_and_mount(disk_id):
     # now the mount point is the third word on the last line of the output
     disk_mount = output.splitlines()[-1].split()[2]
 
+    return disk_mount
+
+
+# This function is not currently being used
+def get_disk_volume(disk_id, disk_mount):
+    disk_volume = ''  # a unique ID e.g. \\?\Volume{5fd765ff-068e-11e4-bc8d-806e6f6e6963}\
+
     # we now need to link the mount point to the volume id that is actually used
     cmd = '{}\\dd.exe --list'.format(_dd_path)
     _, output, return_code = run_cmd_no_pipe(cmd)
-
-    if not return_code:
-        debugger('Retrieved dd --list output')
-    else:
-        debugger('[ERROR] ' + error.strip('\n'))
-        return
 
     # we will process the output line by line to find the line containing the mount point
     # the line at [index - 3] from the respective one contains the volume id
@@ -131,7 +130,7 @@ def get_disk_volume_and_mount(disk_id):
             disk_volume = output_lines[index - 3].strip()
             break
 
-    return disk_mount, disk_volume
+    return disk_volume
 
 
 def close_all_explorer_windows():
@@ -141,7 +140,7 @@ def close_all_explorer_windows():
     if not return_code:
         debugger('Closed all Explorer windows')
     else:
-        debugger('[ERROR] close_all_explorer_windows(): ' + error.strip('\n'))
+        debugger('[ERROR]: ' + error.strip('\n'))
 
 
 def test_write(disk_mount):
@@ -151,7 +150,7 @@ def test_write(disk_mount):
     if not return_code:
         debugger('Written 40M random data to {}:\\'.format(disk_mount))
     else:
-        debugger('[ERROR] test_write(): ' + output.strip('\n'))
+        debugger('[ERROR]: ' + output.strip('\n'))
 
 
 # This function is not currently being used
@@ -165,7 +164,7 @@ def unmount_disk(disk_mount):
     if not return_code:
         debugger('{}:\\ successfully unmounted'.format(disk_mount))
     else:
-        debugger('[ERROR] unmount_disk(): ' + error.strip('\n'))
+        debugger('[ERROR]: ' + error.strip('\n'))
 
 
 # This function is not currently being used
@@ -173,7 +172,10 @@ def unmount_disk(disk_mount):
 #          Otherwise, the mount point will remain removed from the volume directory!
 #          This is a persistent change and CANNOT be fixed by a reboot!
 def mount_disk(disk_id):
-    disk_mount, disk_volume = get_disk_volume_and_mount(disk_id)
+    # WORK IN PROGRESS
+    # the following may not work if the disk has been unmounted, consider caching
+    disk_mount = get_disk_mount(disk_id)
+    disk_volume = get_disk_volume(disk_id, disk_mount)
 
     cmd = "mountvol {}:\\ {}".format(disk_mount, disk_volume)
     _, error, return_code = run_cmd_no_pipe(cmd)
@@ -181,14 +183,19 @@ def mount_disk(disk_id):
     if not return_code:
         debugger('{} successfully mounted'.format(disk_mount))
     else:
-        debugger('[ERROR] mount_disk(): ' + error.strip('\n'))
+        debugger('[ERROR]: ' + error.strip('\n'))
 
 
 def format_disk(disk_id):
+    # TODO: look into cmd = 'format {}: /Q /X'.format(disk_mount)
     TEMP_DIR = 'C:\\temp\\kano-burner\\'
 
+    # extract the id of the physical disk, required by diskpart
+    # e.g. \\?\Device\Harddisk[id]\Partition0
     id = int(disk_id.split("Harddisk")[1][0])  # access by string index alone is dangerous!
-    diskpart_format_script = 'select disk {}\n'.format(id) + 'clean'
+
+    # create a diskpart script to format the given disk
+    diskpart_format_script = 'select disk {} \nclean'.format(id)
     write_file_contents(TEMP_DIR + "format_disk.txt", diskpart_format_script)
 
     # run the created diskpart script
