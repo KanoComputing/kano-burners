@@ -70,11 +70,12 @@ def get_disk_names():
 
 
 def get_disk_sizes():
-    cmd = "fdisk -l | grep 'Disk /dev/' | awk '{print $5}'"
+    cmd = "fdisk -l | grep 'Disk /dev/'"
     output, error, return_code = run_cmd(cmd)
 
     disk_sizes = []
-    for size in output.splitlines():
+    for line in sorted(output.splitlines()):
+        size = line.split()[4]
         disk_sizes.append(float(size) / BYTES_IN_GIGABYTE)
 
     if return_code:
