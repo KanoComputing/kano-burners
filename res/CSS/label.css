@@ -40,3 +40,7 @@ QLabel#footer {
 QLabel#footer:hover {
     color: white;
 }
+
+QLabel#dialogTitle {
+    font-size: 25px;
+}

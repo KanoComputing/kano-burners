@@ -34,3 +34,35 @@ QPushButton:disabled {
     background-color: #dddddd;
     color: white;
 }
+
+QPushButton#dialogOk {
+    background-color: #7cc640;
+    color: white;
+}
+
+QPushButton#dialogOk:pressed {
+    background-color: #6DB038;
+}
+
+QPushButton#dialogOK:hover {
+    background-color: #91DD54;
+}
+
+QPushButton#dialogCancel {
+    background-color: #f37677;
+    color: white;
+}
+
+QPushButton#dialogCancel:pressed {
+    background-color: #D55555;
+}
+
+QPushButton#dialogCancel:hover {
+    background-color: #FF9494;
+}
+
+/* Styling for when the button is disabled */
+QPushButton:disabled#dialogOk {
+    background-color: #dddddd;
+    color: white;
+}

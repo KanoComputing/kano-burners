@@ -9,8 +9,8 @@
 
 import os
 from PyQt4 import QtCore, QtGui
-from src.common.utils import load_css_for_widget
-from src.common.paths import images_path, css_path
+from src.common.utils import load_css_for_widget, read_file_contents
+from src.common.paths import images_path, css_path, base_path
 
 
 class HoverButton(QtGui.QPushButton):
@@ -164,3 +164,67 @@ class VerticalContainer(QtGui.QWidget):
             current_height += spacing
             widget.move((self.width() - widget.width()) / 2, current_height)
             current_height += widget.height()
+
+
+class DisclaimerDialog(QtGui.QDialog):
+    def __init__(self, parent):
+        super(DisclaimerDialog, self).__init__(parent)
+
+        palette = self.palette()
+        palette.setColor(self.backgroundRole(), QtGui.QColor(255, 255, 255))
+        self.setPalette(palette)
+
+        self.setWindowTitle("Are you sure?")
+        heading = QtGui.QLabel("Hey! Are you sure?")
+        heading.setObjectName("dialogTitle")
+        load_css_for_widget(heading, os.path.join(css_path, 'label.css'))
+
+        textview = self.addTextView()
+
+        self.checkbox = QtGui.QCheckBox('I still want to do this', self)
+        self.checkbox.clicked.connect(self.enableButton)
+        load_css_for_widget(self.checkbox, os.path.join(css_path, 'checkbox.css'))
+
+        self.okButton = QtGui.QPushButton("OK")
+        self.okButton.clicked.connect(self.accept)
+        self.okButton.setEnabled(False)
+        self.okButton.resize(70, 50)
+        self.okButton.setObjectName("dialogOk")
+        load_css_for_widget(self.okButton, os.path.join(css_path, 'button.css'))
+
+        cancelButton = QtGui.QPushButton("CANCEL")
+        cancelButton.clicked.connect(self.reject)
+        cancelButton.setObjectName("dialogCancel")
+        load_css_for_widget(cancelButton, os.path.join(css_path, 'button.css'))
+
+        mainLayout = QtGui.QVBoxLayout()
+        hbox = QtGui.QHBoxLayout()
+        hbox.addWidget(self.okButton)
+        hbox.addWidget(cancelButton)
+
+        mainLayout.addWidget(heading)
+        mainLayout.addWidget(textview)
+        mainLayout.addWidget(self.checkbox)
+        mainLayout.addLayout(hbox)
+
+        self.setLayout(mainLayout)
+
+    def enableButton(self):
+        self.okButton.setEnabled(self.checkbox.isChecked())
+
+    def addTextView(self):
+        textEdit = QtGui.QTextEdit()
+        load_css_for_widget(textEdit, os.path.join(css_path, 'textview.css'))
+
+        disclaimer_path = os.path.join(base_path, "DISCLAIMER")
+        disclaimer_text = read_file_contents(disclaimer_path)
+
+        textEdit.setText(disclaimer_text)
+        textEdit.setReadOnly(True)
+        textEdit.setGeometry(100, 100, 800, 600)
+
+        return textEdit
+
+    def accepted(self):
+        response = self.exec_()
+        return response == QtGui.QDialog.Accepted
