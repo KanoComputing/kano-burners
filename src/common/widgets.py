@@ -188,7 +188,6 @@ class DisclaimerDialog(QtGui.QDialog):
         self.okButton = QtGui.QPushButton("OK")
         self.okButton.clicked.connect(self.accept)
         self.okButton.setEnabled(False)
-        self.okButton.resize(70, 50)
         self.okButton.setObjectName("dialogOk")
         load_css_for_widget(self.okButton, os.path.join(css_path, 'button.css'))
 
@@ -199,12 +198,16 @@ class DisclaimerDialog(QtGui.QDialog):
 
         mainLayout = QtGui.QVBoxLayout()
         hbox = QtGui.QHBoxLayout()
+        hbox.addSpacing(80)
         hbox.addWidget(self.okButton)
+        hbox.addSpacing(20)
         hbox.addWidget(cancelButton)
+        hbox.addSpacing(80)
 
+        mainLayout.setSpacing(20)
         mainLayout.addWidget(heading)
         mainLayout.addWidget(textview)
-        mainLayout.addWidget(self.checkbox)
+        mainLayout.addWidget(self.checkbox, alignment=QtCore.Qt.AlignHCenter)
         mainLayout.addLayout(hbox)
 
         self.setLayout(mainLayout)
