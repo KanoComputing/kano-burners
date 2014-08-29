@@ -29,9 +29,15 @@ def extra_datas(path):
             if os.path.isfile(file_path):
                 files.append(os.path.join(os.getcwd(), file_path))
             recursive_glob('{}/*'.format(file_path), files)
+
     files = []
-    recursive_glob('{}/*'.format(path), files)
     extra_datas = []
+
+    if os.path.isfile(path):
+        files.append(os.path.join(os.getcwd(), path))
+    else:
+        recursive_glob('{}/*'.format(path), files)
+
     for f in files:
         extra_datas.append((f.split('kano-burners')[1][1:], f, 'DATA'))
     return extra_datas
@@ -39,3 +45,4 @@ def extra_datas(path):
 # include all resources and tools of the project in the App bundle
 a.datas += extra_datas(os.path.join(os.getcwd(), '..', '..', 'res'))
 a.datas += extra_datas(os.path.join(os.getcwd(), '..', '..', 'win'))
+a.datas += extra_datas(os.path.join(os.getcwd(), '..', '..', 'DISCLAIMER'))

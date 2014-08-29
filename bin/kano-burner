@@ -38,6 +38,7 @@ if __name__ == '__main__' and __package__ is None:
 
 from PyQt4 import QtGui, QtCore
 from src.common.ui import UI
+from src.common.widgets import DisclaimerDialog
 from src.common.download import download_kano_os
 from src.common.utils import delete_dir, make_dir, debugger
 from src.common.errors import NO_DISKS_ERROR
@@ -115,6 +116,12 @@ class BurnerGUI(UI):
     # @Override
     # This method is called when the BURN! button is clicked
     def onStartClick(self):
+        # Launch disclaimer dialog
+        disclaimer = DisclaimerDialog(self)
+        if not disclaimer.accepted():
+            self.onRetryClick()
+            return
+
         # the button is disabled until the user selects a disk - we can safely proceed
         # grab the disk id e.g. osx: /dev/disk1 and switch screen to progressScreen
         selected_disk = self.disks[self.disksComboBox.currentIndex()]['id']

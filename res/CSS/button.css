@@ -23,18 +23,54 @@ QPushButton {
     color: #444444;
 }
 
-/* Styling for when the mouse is over the button */
-QPushButton:hover {
-    background-color: #e6e6e6;
-}
-
 /* Styling for when the button is pressed */
 QPushButton:pressed {
     background-color: #eeeeee;
+}
+
+/* Styling for when the mouse is over the button */
+QPushButton:hover:!pressed {
+    background-color: #e6e6e6;
 }
 
 /* Styling for when the button is disabled */
 QPushButton:disabled {
     background-color: #dddddd;
     color: white;
+}
+
+
+QPushButton#dialogOk {
+    background-color: #7cc640;
+    color: white;
+}
+
+QPushButton#dialogOk:pressed {
+    background-color: #6DB038;
+}
+
+/* Styling for when hovering over but not pressing the button */
+QPushButton#dialogOk:hover:!pressed {
+    background-color: #91DD54;
+}
+
+/* Styling for when the button is disabled */
+QPushButton:disabled#dialogOk {
+    background-color: #dddddd;
+    color: white;
+}
+
+
+QPushButton#dialogCancel {
+    background-color: #f37677;
+    color: white;
+}
+
+QPushButton#dialogCancel:pressed {
+    background-color: #D55555;
+}
+
+/* Styling for when hovering over but not pressing the button */
+QPushButton#dialogCancel:hover:!pressed {
+    background-color: #FF9494;
 }

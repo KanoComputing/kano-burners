@@ -75,12 +75,12 @@ def make_dir(directory):
         os.makedirs(directory)
 
 
-def read_file_contents_as_lines(path):
+def read_file_contents(path):
     if os.path.exists(path):
         with open(path) as infile:
             content = infile.readlines()
             lines = [line.strip() for line in content]
-            return lines
+            return '\n'.join(lines)
 
 
 def write_file_contents(path, data):
