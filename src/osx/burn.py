@@ -1,10 +1,23 @@
+#!/usr/bin/env python
 
 # burn.py
 #
 # Copyright (C) 2014 Kano Computing Ltd.
 # License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
 #
-# [File description]
+#
+# OSX - Burning Kano OS module
+#
+# The burning process consists of two tasks: one for writing
+# and one for progress polling.
+#
+# The writing (burning) thread uses a gzip to dd pipe to eliminate the
+#    need for uncompressing the image and extra space needed.
+#
+# The polling thread sends a signal to dd which triggers it to output
+#    its progress to stderr in the form of 'X bytes written'.
+#
+# We will also notify the UI of any errors that might have occured.
 
 
 import time
@@ -17,6 +30,13 @@ from src.common.errors import BURN_ERROR
 
 
 def start_burn_process(path, os_info, disk, report_progress_ui):
+    '''
+    This method is used by the backendThread to burn Kano OS.
+
+    It starts the burning process on a separate thread and then
+    sits in the polling loop. It uses a Queue to get results from
+    the burning thread and returns an error if necessary.
+    '''
 
     # Set the progress to 0% on the UI progressbar, and write what we're up to
     report_progress_ui(0, 'preparing to burn OS image..')
@@ -31,7 +51,7 @@ def start_burn_process(path, os_info, disk, report_progress_ui):
                                          report_progress_ui))
     burn_thread.start()
 
-    # delegate the polling loop job and pass the reference of the burning thread
+    # start the polling loop and pass the reference of the burning thread
     poll_burning_thread(burn_thread)
 
     # make sure we clean up threading resources
@@ -93,7 +113,7 @@ def burn_kano_os(path, disk, size, return_queue, report_progress_ui):
 
 
 def poll_burning_thread(thread):
-    time.sleep(1)
+    time.sleep(1)  # wait for dd to start
     debugger('Polling burner for progress..')
     cmd = 'kill -INFO `pgrep ^dd`'
 

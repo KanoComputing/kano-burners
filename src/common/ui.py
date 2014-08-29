@@ -1,10 +1,19 @@
+#!/usr/bin/env python
 
 # ui.py
 #
 # Copyright (C) 2014 Kano Computing Ltd.
 # License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
 #
-# [File description]
+#
+# Kano Burner UI back-end
+#
+# The UI base class handles all the PyQt front-end and uses a VerticalContainer
+# as a layout manager.
+#
+# The application's window contains two such VerticalContainers. The first holds
+# only the header, footer and a spacer between the two. The second holds the
+# widgets needed on that specific screen.
 
 
 import os
@@ -14,6 +23,7 @@ from src.common.utils import load_css_for_widget
 from src.common.paths import images_path, css_path
 
 
+# App dimensions constants
 APP_WIDTH = 500
 APP_HEIGHT = 330
 CONTAINER_HEIGHT = 140
@@ -26,13 +36,28 @@ LABEL_CSS_FOOTER = 'footer'
 
 
 class UI(QtGui.QWidget):
+    '''
+    This base class handles all the PyQt front-end.
+
+    The application then has the freedom of defining its behaviour by implementing
+    the event stubs provided without being concerned about Qt api.
+
+    It uses a custom layout manager to build the front-end which again hides
+    Qt api in order to make the code more readable and avoid duplication.
+
+    The notion of 'screen' is used here to encapsulate the widgets used in
+    the different stages of the application, e.g. Downloading: Title, Status, ProgressBar.
+
+    We switch between different screens by hiding all of them
+    and showing only the one we want.
+    '''
 
     def __init__(self):
         super(UI, self).__init__()
         self.initUI()
 
     def initUI(self):
-        # initialise the UI - set title, size, center, set theme, app frames
+        # initialise the UI - set title, size, center, set theme, app frames etc
         # and finally display it
         self.setWindowTitle('Kano OS Burner')
         self.resize(APP_WIDTH, APP_HEIGHT)
@@ -69,10 +94,11 @@ class UI(QtGui.QWidget):
         # adding the 3 items to the application container
         self.container.addImage(os.path.join(images_path, 'header.png'))
         self.container.addSpacer(CONTAINER_HEIGHT)
-        footer = self.container.addLabel("Questions? help@kano.me", objectName=LABEL_CSS_FOOTER)
+        footer = self.container.addLabel("Questions? Visit help.kano.me", objectName=LABEL_CSS_FOOTER)
         load_css_for_widget(footer, os.path.join(css_path, 'label.css'))
 
     def createScreens(self):
+        # the screens will be positioned on the spacer of the main VerticalContainer
         self.introScreen = self.createIntroScreen(0, 120)
         self.progressScreen = self.createProgressScreen(0, 120)
         self.finishScreen = self.createFinishScreen(0, 120)
@@ -83,7 +109,7 @@ class UI(QtGui.QWidget):
 
         self.disksComboBox = container.addComboBox(self.onComboBoxClick, defaultItem='Select device')
         self.startButton = container.addButton("BURN!", self.onStartClick)
-        self.startButton.setEnabled(False)
+        self.startButton.setEnabled(False)  # disable the BURN! button
         return container
 
     def createProgressScreen(self, x, y):
@@ -106,13 +132,14 @@ class UI(QtGui.QWidget):
     def createErrorScreen(self, x, y):
         container = self.createContainer(x, y)
 
-        self.errorTitleLabel = container.addLabel('Error title', LABEL_CSS_TITLE)
-        self.errorDescriptionLabel = container.addLabel('Error description', LABEL_CSS_DESCRIPTION)
+        self.errorTitleLabel = container.addLabel('title', LABEL_CSS_TITLE)
+        self.errorDescriptionLabel = container.addLabel('description', LABEL_CSS_DESCRIPTION)
         container.addSpacer(20)
         self.FinishButton = container.addButton("TRY AGAIN", self.onRetryClick)
         return container
 
     def createContainer(self, x, y):
+        # this is used when creating the app screens
         container = VerticalContainer(self)
         container.hide()
         container.setGeometry(x, y, APP_WIDTH, CONTAINER_HEIGHT)
@@ -138,11 +165,6 @@ class UI(QtGui.QWidget):
 
     def setStatusDescription(self, text):
         self.statusDescriptionLabel.setText(text)
-
-    def setComboBox(self, item_list):
-        self.disksComboBox.removeItem('Device')
-        for item in item_list:
-            self.disksComboBox.addItem(item)
 
     def onStart(self):
         pass

@@ -1,14 +1,25 @@
+#!/usr/bin/env python
 
 # burn.py
 #
 # Copyright (C) 2014 Kano Computing Ltd.
 # License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
 #
-# [File description]
+#
+# Windows - Burning Kano OS module
+#
+# The writing (burning) process uses a 7zip to dd pipe to eliminate the
+# need for uncompressing the image and extra space needed.
+#
+# As opposed to OSX and Linux versions of dd, here do not need a polling loop.
+# However, dd does not report its writing speed, so we time it ourselves.
+#
+# We will also notify the UI of any errors that might have occured.
 
 
 import time
 import subprocess
+
 from src.common.errors import BURN_ERROR
 from src.common.utils import calculate_eta, debugger, BYTES_IN_MEGABYTE
 from src.common.paths import _7zip_path, _dd_path
@@ -19,6 +30,11 @@ last_written_mb = 0
 
 
 def start_burn_process(path, os_info, disk, report_progress_ui):
+    '''
+    This method is used by the backendThread to burn Kano OS.
+
+    It starts the burning process and returns any errors if necessary.
+    '''
 
     # Set the progress to 0% on the UI progressbar, and write what we're up to
     report_progress_ui(0, 'preparing to burn OS image..')
@@ -62,7 +78,9 @@ def burn_kano_os(os_path, disk, size, report_progress_ui):
 
                 # calculate stats to be reported to UI
                 progress = int(total_written_mb / (size / BYTES_IN_MEGABYTE) * 100)
+
                 speed = calculate_speed(total_written_mb, elapsed_seconds)
+
                 eta = calculate_eta(total_written_mb, size / BYTES_IN_MEGABYTE, speed)
 
                 report_progress_ui(progress, 'speed {0:.2f} MB/s  eta {1:s}  completed {2:d}%'

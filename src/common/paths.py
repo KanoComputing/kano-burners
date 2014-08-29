@@ -5,7 +5,12 @@
 # Copyright (C) 2014 Kano Computing Ltd.
 # License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
 #
+#
 # Paths used throughout the project
+#
+# We create path constants for resources and windows tools, as well as
+# detecting whether we are running from source or a PyInstaller bundle.
+# This is important when setting the base path of the project.
 
 
 import os

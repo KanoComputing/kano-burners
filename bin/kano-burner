@@ -14,12 +14,15 @@
 # We use two classes to distinguish between front-end and back-end.
 #
 # BurnerGUI class extends the UI class to override the methods which are called
-#   on the appropriate events (e.g. start button click). This gives the flexibility
-#   of reusing the UI class and the abstraction of how the UI class works.
+#    on the appropriate events (e.g. start button click). This gives the flexibility
+#    of reusing the UI class and the abstraction of how the UI class works.
 #
 # BurnerBackendThread class starts the main processes of downloading, burning and
-#   runs them in the background. It also needs to report issues and progress to the UI
-#   and this is done through custom Qt signals.
+#    runs them in the background. It also needs to report issues and progress to the UI
+#    and this is done through custom Qt signals.
+#
+# This separation gives us a high-level overview of the
+# major processes and steps across all three platforms
 
 
 import os
@@ -40,6 +43,7 @@ from src.common.utils import delete_dir, make_dir, debugger
 from src.common.errors import NO_DISKS_ERROR
 
 
+# the directory where we'll download the OS
 TEMP_DIR = ''  # set when detecting the platform and updated when a folder is created
 
 
@@ -67,7 +71,17 @@ elif platform.system() == 'Windows':
 
 
 class BurnerGUI(UI):
+    '''
+    This class extends the UI class common on all three platforms.
 
+    Here we simply override methods which get called by the UI on specific events.
+
+    We define the behaviour of the application in these methods while maintaining
+    front-end and back-end separation.
+    '''
+
+    # @Override
+    # This method is called when the application is launched
     def onStart(self):
         # make the temp directory to hold the downloaded image
         debugger('Making temp directory')
@@ -79,11 +93,16 @@ class BurnerGUI(UI):
         if error:
             self.showError(error)
 
+    # @Override
+    # This method is called when the ComboBox is clicked
+    # and just before the dropdown menu pops up
     def onComboBoxClick(self):
+        # empty the combobox and enable the BURN! button
+        # an item will be selected automatically
         self.disksComboBox.clear()
         self.startButton.setEnabled(True)
 
-        # list drives
+        # get the list of disks and show the error screen if there are none
         debugger('Scanning drives..')
         self.disks = get_disks_list()
         if not self.disks:
@@ -93,6 +112,8 @@ class BurnerGUI(UI):
         for disk in self.disks:
             self.disksComboBox.addItem('{0}, {1:.2f} GB'.format(disk['name'], disk['size']))
 
+    # @Override
+    # This method is called when the BURN! button is clicked
     def onStartClick(self):
         # the button is disabled until the user selects a disk - we can safely proceed
         # grab the disk id e.g. osx: /dev/disk1 and switch screen to progressScreen
@@ -103,7 +124,7 @@ class BurnerGUI(UI):
         backendThread = BurnerBackendThread(selected_disk)
 
         # connecting Qt signals to methods on the UI
-        # such that the backend can report its progress
+        # such that the back-end can report its progress
         backendThread.notifyProgress.connect(self.setProgress)
         backendThread.notifyStage.connect(self.setStatusTitle)
         backendThread.notifyDescription.connect(self.setStatusDescription)
@@ -113,12 +134,16 @@ class BurnerGUI(UI):
         backendThread.start()
         time.sleep(1)  # very odd fix
 
+    # @Override
+    # This method is called when the backendThread finishes
     def onBackendFinish(self, error):
         if error:
             self.showError(error)
         else:
             self.showScreen(self.finishScreen)
 
+    # @Override
+    # This method is called when the TRY AGAIN button is clicked
     def onRetryClick(self):
         self.disksComboBox.restore()
         self.progressBar.reset()
@@ -126,18 +151,35 @@ class BurnerGUI(UI):
         self.showScreen(self.introScreen)
         self.onStart()
 
+    # @Override
+    # This method is called when the FINISH! button is clicked
     def onFinishClick(self):
         self.close()
 
+    # @Override
+    # This method is called when the application is closing
     def onFinish(self):
         debugger('Removing temp files')
         delete_dir(TEMP_DIR)
 
 
 class BurnerBackendThread(QtCore.QThread):
+    '''
+    The back-end thread separates background processes from
+    the UI's event handling loop.
 
-    # signals must be defined here and not in init
-    # they are used by the backend to communicate with the UI and update things
+    It communicates with the UI thread though Qt signals which carry a
+    payload and are connected to signal handlers, i.e. methods. When we
+    emit a signal we are effectively sending some data to the UI which
+    in turn is then responsible for displaying the data e.g. burn speed.
+
+    From a top level, the back-end does four things: downloads the OS,
+    prepares the disk for burning, burns the OS, and finally ejects
+    the disk for safe removal. These processes will use the signals to
+    report progress to the UI and an erroneous or successful completion.
+    '''
+
+    # QT signals must be defined here and not in init
     notifyProgress = QtCore.pyqtSignal(int)
     notifyStage = QtCore.pyqtSignal(str)
     notifyDescription = QtCore.pyqtSignal(str)
@@ -148,22 +190,28 @@ class BurnerBackendThread(QtCore.QThread):
         self.selected_disk = disk
 
     def showStage(self, text):
+        # this signal sets the Title label e.g. Downloading Kano OS..
         self.notifyStage.emit(text)
 
     def showDescription(self, text):
+        # this signal sets the Description label e.g. eta 3 minutes..
         self.notifyDescription.emit(text)
 
     def showProgress(self, progress, text):
+        # this signal sets both the progressbar percentage and the Description label
         self.notifyProgress.emit(progress)
         self.notifyDescription.emit(text)
 
     def showFinish(self, error):
+        # this signal notifies whether we finishes sucessfully or with an error
         self.notifyFinish.emit(error)
 
     def run(self):
         global TEMP_DIR
 
         # Step 1: download the latest Kano OS image
+        # the process returns a dict with the info about the latest OS release
+        # e.g. file name, md5, size..
         debugger('Downloading Kano OS..')
         self.showStage('Downloading Kano OS..')
         os_info, error = download_kano_os(TEMP_DIR, self.showProgress)
@@ -174,6 +222,7 @@ class BurnerBackendThread(QtCore.QThread):
             return
 
         # Step 2: preparing the disk (unmounting, formatting, etc)
+        # this process differs slightly depending on the platform running it
         debugger('Preparing {} for burning..'.format(self.selected_disk))
         self.showStage('Preparing disk for burning..')
         prepare_disk(self.selected_disk, self.showDescription)
@@ -187,6 +236,7 @@ class BurnerBackendThread(QtCore.QThread):
             return
 
         # Step 4: eject selected disk so the user can unplug safely
+        # on OSX, the disk will automatically be mounted back after dd finishes
         debugger('Ejecting disk..')
         self.showStage('Waiting for things to settle..')
         time.sleep(5)  # wait for dd to mount the disk back
@@ -198,11 +248,13 @@ class BurnerBackendThread(QtCore.QThread):
 
 
 def main():
+    # start the UI event handling loop
     app = QtGui.QApplication(sys.argv)
     burnerUI = BurnerGUI()
     sys.exit(app.exec_())
 
 
 if __name__ == '__main__':
+    # before we start the application, make sure it is run with admin privileges
     request_admin_privileges()
     main()

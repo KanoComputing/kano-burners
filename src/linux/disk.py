@@ -1,16 +1,41 @@
+#!/usr/bin/env python
 
 # disk.py
 #
 # Copyright (C) 2014 Kano Computing Ltd.
 # License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
 #
-# [File description]
+#
+# Linux - Disk related operations
+#
+# There are two main operations here.
+#
+# 1. Providing a list of disks Kano OS can be burned to. We will exclude
+#    any potential hard drives from this list or disks which are too small.
+#
+# 2. Preparing the given disk for the burning process (unmounting, formatting).
+#
+# Tools used: parted, fdisk, mkdosfs, umount, eject
 
 
 from src.common.utils import run_cmd, debugger, BYTES_IN_GIGABYTE
 
 
 def get_disks_list():
+    '''
+    This method is used by the BurnerGUI when the user clicks the ComboBox.
+
+    It grabs all disk ids, disk names, and disk sizes separately and then
+    matches them by index. Sizes will be converted to GB (not GiB).
+
+    NOTE: We do no return all disks that are found!
+
+    Example:
+        disk id: /dev/sda
+        disk name: Sandisk Ultra USB
+        disk size: 16.03
+    '''
+
     disks = list()
 
     disk_ids = get_disk_ids()
@@ -85,6 +110,11 @@ def get_disk_sizes():
 
 
 def prepare_disk(disk_id, report_ui):
+    '''
+    This method is used by the backendThread to unmount
+    and format the disk before the burning process starts.
+    '''
+
     report_ui('unmounting disk')
     unmount_disk(disk_id)
 
@@ -132,6 +162,11 @@ def format_disk(disk_id):
 
 
 def eject_disk(disk_id):
+    '''
+    This method is used by the backendThread to ensure safe removal
+    after burning finished successfully.
+    '''
+
     cmd = 'eject {}'.format(disk_id)
     _, error, return_code = run_cmd(cmd)
 

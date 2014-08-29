@@ -4,7 +4,11 @@
 # Copyright (C) 2014 Kano Computing Ltd.
 # License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
 #
-# [File description]
+#
+# CSS styling for Progress Bars
+#
+# Progress bars which have set this stylesheet will have rounded corners,
+# set dimensions and colours for both the widget's background and progress.
 */
 
 

@@ -1,10 +1,14 @@
+#!/usr/bin/env python
 
 # errors.py
 #
 # Copyright (C) 2014 Kano Computing Ltd.
 # License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
 #
-# [File description]
+#
+# Standard Errors
+#
+# This file only contains typical errors to be reported on the UI.
 
 
 INTERNET_ERROR = {

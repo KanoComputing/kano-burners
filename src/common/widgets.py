@@ -1,10 +1,16 @@
+#!/usr/bin/env python
 
 # widgets.py
 #
 # Copyright (C) 2014 Kano Computing Ltd.
 # License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
 #
-# [File description]
+#
+# Custom PyQt widgets
+#
+# We customise and/or extend standard PyQt widgets in this file such
+# that they suit our needs. For the most part, these widgets may be
+# extended further and used in other projects.
 
 
 import os
@@ -14,6 +20,10 @@ from src.common.paths import images_path, css_path
 
 
 class HoverButton(QtGui.QPushButton):
+    '''
+    This extended Button widget simply changes the mouse cursor
+    when it is inside and restores it otherwise.
+    '''
 
     # @Override
     def enterEvent(self, event):
@@ -27,9 +37,16 @@ class HoverButton(QtGui.QPushButton):
 
 
 class ComboBox(QtGui.QComboBox):
+    '''
+    This extended ComboBox widget has two additional signals, change
+    the mouse cursor on hover, and can have a default item.
 
-    # these signals are emitted when the user clicks the
-    # widget and the popup list is shown or closed
+    This item is simply some text we display on the widget until
+    the user selects an item from the menu.
+    '''
+
+    # custom signals for when the user clicks the widget and
+    # when the widget resizes
     clicked = QtCore.pyqtSignal()
     resized = QtCore.pyqtSignal()
 
@@ -41,6 +58,8 @@ class ComboBox(QtGui.QComboBox):
             self.addItem(self.defaultItem)
 
     def restore(self):
+        # this method should be used when removing all the items
+        # and the default item should be restored
         self.clear()
         if self.defaultItem:
             self.addItem(self.defaultItem)
@@ -69,6 +88,16 @@ class ComboBox(QtGui.QComboBox):
 
 
 class MultistageProgressBar(QtGui.QProgressBar):
+    '''
+    This progress bar reports overall progress for a given number
+    of processes using it.
+
+    The processes report in their own frame of reference (0-100%) by setting that
+    value on the widget, we then calculate and display the overall progress.
+
+    WARNING: It is assumed that all processes report in an ascending manner ONLY!
+             If process X retries, the widget assumes the next process is reporting!
+    '''
 
     def __init__(self, parent, stages=1):
         QtGui.QProgressBar.__init__(self, parent)
@@ -97,6 +126,16 @@ class MultistageProgressBar(QtGui.QProgressBar):
 
 
 class VerticalContainer(QtGui.QWidget):
+    '''
+    This is a custom layout manager which can only have certain types of
+    widgets inside, added via their respective functions.
+
+    The widgets are positined vertically one after the other (in the order
+    they have been added), centered, and equally distanced from one another.
+
+    Methods which add widgets to the container will also set CSS styling.
+    '''
+
     # TODO: include addVerticalContainer() - to be used by UI instead of a spacer
 
     def __init__(self, parent):
@@ -112,14 +151,14 @@ class VerticalContainer(QtGui.QWidget):
 
     def addProgressBar(self, stages=1):
         progressBar = MultistageProgressBar(self, stages)
-        progressBar.setTextVisible(False)
+        progressBar.setTextVisible(False)  # hide a default % completion text
         load_css_for_widget(progressBar, os.path.join(css_path, 'progressbar.css'))
         self.widgets.append(progressBar)
         return progressBar
 
     def addLabel(self, text, objectName=""):
         label = QtGui.QLabel(text, self)
-        label.setObjectName(objectName)
+        label.setObjectName(objectName)  # set a class ID for CSS styling
         load_css_for_widget(label, os.path.join(css_path, 'label.css'))
         self.widgets.append(label)
         return label
@@ -134,12 +173,15 @@ class VerticalContainer(QtGui.QWidget):
         comboBox = ComboBox(self, defaultItem)
         comboBox.clicked.connect(onClick)
         comboBox.resized.connect(self.centerWidgets)
+
+        # the resizing policy will allow the combobox to resize depending on its contents
         comboBox.setSizeAdjustPolicy(QtGui.QComboBox.AdjustToContents)
         load_css_for_widget(comboBox, os.path.join(css_path, 'combobox.css'), images_path)
         self.widgets.append(comboBox)
         return comboBox
 
     def addSpacer(self, height):
+        # to be used when customising spacing between widgets
         spacer = QtGui.QWidget(self)
         spacer.resize(self.width(), height)
         self.widgets.append(spacer)

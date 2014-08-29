@@ -1,10 +1,22 @@
+#!/usr/bin/env python
 
 # disk.py
 #
 # Copyright (C) 2014 Kano Computing Ltd.
 # License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
 #
-# [File description]
+#
+# Windows - Disk related operations
+#
+# There are two main operations here.
+#
+# 1. Providing a list of disks Kano OS can be burned to. We will exclude
+#    any potential hard drives from this list or disks which are too small.
+#
+# 2. Preparing the given disk for the burning process (unmounting, formatting, etc).
+#    On Windows this is particularly tricky, as the disk may deny access quite often.
+#
+# Tools used: wmic, diskpart, mountvol, dd.exe, nircmd.exe
 
 
 from src.common.utils import run_cmd_no_pipe, write_file_contents, debugger, BYTES_IN_GIGABYTE
@@ -12,6 +24,25 @@ from src.common.paths import _dd_path, _nircmd_path
 
 
 def get_disks_list():
+    '''
+    This method is used by the BurnerGUI when the user clicks the ComboBox.
+
+    It grabs all disk physical ids, names, and sizes with one command and
+    then parses the output. Sizes will be converted to GB (not GiB).
+
+    NOTE: We do no return all disks that are found!
+
+    Example:
+        disk id: \\?\Device\Harddisk2\Partition0
+        disk name: Sandisk Media USB
+        disk size: 16.03
+
+        disk volume: \\?\Volume{5fd765ff-068e-11e4-bc8d-806e6f6e6963}\
+        physical disk: \\.\PHYSICALDRIVE2
+
+        NOTE: physical drive id and device id match!
+    '''
+
     disks = list()
 
     cmd = "wmic diskdrive get deviceid, model, size /format:list"
@@ -27,7 +58,7 @@ def get_disks_list():
         if output_lines[index].startswith("DeviceID="):
 
             # grab the disk id from e.g. \\.\PHYSICALDRIVE[0] and use Partition0
-            # which for dd is the entire disk
+            # which for dd is the entire disk, not some partition on the disk
             id = output_lines[index].split('=')[1][-1]
             disk_id = "\\\\?\\Device\\Harddisk{}\\Partition0".format(id)
 
@@ -62,7 +93,12 @@ def get_disks_list():
 
 
 def prepare_disk(disk_id, report_ui):
-    # Windows magic
+    '''
+    Windows magic
+
+    This method is used by the backendThread to enable the disk
+    for writing with dd and getting passed denial of access.
+    '''
 
     report_ui('retrieving mount point and disk volume..')
     disk_mount = get_disk_mount(disk_id)
@@ -74,6 +110,7 @@ def prepare_disk(disk_id, report_ui):
     report_ui('formatting the disk')
     format_disk(disk_id)
 
+    # Make SURE this is needed BEFORE uncommenting! READ warning!
     # report_ui('unmounting disk')
     # unmount_disk(disk_mount)
 
@@ -167,12 +204,11 @@ def unmount_disk(disk_mount):
         debugger('[ERROR]: ' + error.strip('\n'))
 
 
-# This function is not currently being used
+# This function is not currently being used - WORK IN PROGRESS
 # WARNING: If unmount_disk() was called, make sure this function is executed!
 #          Otherwise, the mount point will remain removed from the volume directory!
 #          This is a persistent change and CANNOT be fixed by a reboot!
 def mount_disk(disk_id):
-    # WORK IN PROGRESS
     # the following may not work if the disk has been unmounted, consider caching
     disk_mount = get_disk_mount(disk_id)
     disk_volume = get_disk_volume(disk_id, disk_mount)
@@ -209,5 +245,10 @@ def format_disk(disk_id):
 
 
 def eject_disk(disk_id):
-    # TODO?
+    '''
+    This method is used by the backendThread to ensure safe removal
+    after burning finished successfully.
+    '''
+
+    # TODO? Windows does not really require this
     pass

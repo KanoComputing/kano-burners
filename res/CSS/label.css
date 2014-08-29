@@ -4,7 +4,12 @@
 # Copyright (C) 2014 Kano Computing Ltd.
 # License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
 #
-# [File description]
+#
+# CSS styling for Labels
+#
+# Labels which have set this stylesheet will have the text centered
+# within the widget and a minimum width and height. There is also
+# styling for specific classes of Labels for different purposes.
 */
 
 

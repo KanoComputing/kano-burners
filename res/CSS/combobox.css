@@ -4,7 +4,11 @@
 # Copyright (C) 2014 Kano Computing Ltd.
 # License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
 #
-# [File description]
+#
+# CSS styling for ComboBoxes
+#
+# ComboBoxes which have set this stylesheet will have rounded corners,
+# a white background, a custom arrow image, a minimum width and a set height.
 */
 
 
@@ -19,6 +23,8 @@ QComboBox {
 }
 
 /* Styling for the dropdown button */
+/* NOTE: {res_path} will be replaced with the path
+         to the image when the stylesheet is set */
 QComboBox::drop-down {
     min-width: 44px;
     border: 0px;

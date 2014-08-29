@@ -4,7 +4,11 @@
 # Copyright (C) 2014 Kano Computing Ltd.
 # License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
 #
-# [File description]
+#
+# CSS styling for Buttons
+#
+# Buttons which have set this stylesheet will have rounded corners,
+# a white background, set dimensions, a hover and clicked effect.
 */
 
 

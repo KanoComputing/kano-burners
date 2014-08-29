@@ -5,6 +5,12 @@
 # Copyright (C) 2014 Kano Computing Ltd.
 # License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
 #
+#
+# Utility functions
+#
+# This is a mixed collection of functions which can be
+# used on all three platforms. Anything else, must be
+# placed in the appropriate platform folder.
 
 
 import os
@@ -48,8 +54,8 @@ def restore_signals():
                 signal.signal(getattr(signal, sig), signal.SIG_DFL)
 
 
-# used on Windows as there is no support for 'preexec_fn'
 def run_cmd_no_pipe(cmd):
+    # used on Windows as there is no support for 'preexec_fn'
     # all handles (in, out, err) need to be set due to PyInstaller bundling
     process = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -97,9 +103,17 @@ def is_internet():
     return False
 
 
-# This method is used to set CSS styling
-# for a given widget from a given CSS file
 def load_css_for_widget(widget, css_path, res_path=''):
+    '''
+    This method is used to set CSS styling for a given
+    widget from a given CSS file.
+
+    If a resource path is given, it will attempt to replace
+    {res_path} in the CSS with that path.
+
+    NOTE: It assumes only one {res_path} string will be on a single line.
+    '''
+
     css = QtCore.QFile(css_path)
     css.open(QtCore.QIODevice.ReadOnly)
     if css.isOpen():
@@ -125,6 +139,14 @@ def load_css_for_widget(widget, css_path, res_path=''):
 
 
 def calculate_eta(progress, total, speed):
+    '''
+    This function is used by the burning process to calculate when
+    it is expected to finish based on current progress, the total
+    needed, and the speed - e.g. 450 MB of 1000 MB at 50 MB/s.
+
+    NOTE: Units must match.
+    '''
+
     eta_seconds = float(total - progress) / (speed + 1)
 
     hours = int(eta_seconds / 3600)

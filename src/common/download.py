@@ -1,10 +1,21 @@
+#!/usr/bin/env python
 
 # download.py
 #
 # Copyright (C) 2014 Kano Computing Ltd.
 # License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
 #
-# [File description]
+#
+# Downloading Kano OS module
+#
+# The module uses PySmartDL to download the OS image file and
+# urllib2 to get the information about the latest OS release.
+#
+# The downloading process is also required to report it's progress
+# back to the UI, therefore we run PySmartDL as a child process
+# and sit in a polling loop while it is running.
+#
+# We will also notify the UI of any errors that might have occured.
 
 
 import time
@@ -18,6 +29,12 @@ from src.common.errors import DOWNLOAD_ERROR, MD5_ERROR
 
 
 class Downloader(SmartDL):
+    '''
+    This class acts as a PySmartDL wrapper which fixes a process killing bug.
+
+    When the application is closed via the [X] button, we want all downloading
+    threads to be killed immediately and cleaned up.
+    '''
 
     def __init__(self, *args, **kwargs):
         SmartDL.__init__(self, *args, **kwargs)
@@ -34,6 +51,13 @@ class Downloader(SmartDL):
 
 
 def download_kano_os(path, report_progress_ui):
+    '''
+    This method is used by the backendThread to download Kano OS.
+
+    We start PySmartDL as a child process and then sit in a polling loop
+    to report progress to the UI. We will also return the OS info dict
+    along with any error that might have occured.
+    '''
 
     # set the progress to 0% on the UI progressbar, and write what we're up to
     report_progress_ui(0, 'preparing to download OS image..')

@@ -1,10 +1,19 @@
+#!/usr/bin/env python
 
 # dependency.py
 #
 # Copyright (C) 2014 Kano Computing Ltd.
 # License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
 #
-# [File description]
+#
+# Windows - Dependency checking
+#
+# The application needs to meet a few dependencies before
+# it can have the green light to start.
+#
+# Firstly, we check that the necessary tools are installed, e.g. dd, gzip
+# Secondly, we check that there is an internet connection.
+# And finally, we make sure there is enough space to download the OS.
 
 
 import os
@@ -33,6 +42,11 @@ def request_admin_privileges():
 
 
 def check_dependencies(tmp_dir):
+    '''
+    This method is used by the BurnerGUI at the start
+    of the application and on a retry.
+    '''
+
     # looking for an internet connection
     if is_internet():
         debugger('Internet connection detected')
