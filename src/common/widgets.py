@@ -209,6 +209,14 @@ class VerticalContainer(QtGui.QWidget):
 
 
 class DisclaimerDialog(QtGui.QDialog):
+    '''
+    This is a custom popup dialog which contains a title, textedit,
+    a checkbox, and two buttons to accept or cancel.
+
+    We show a disclaimer before starting the burning process, informing
+    the user again about the dangers of overwriting disks.
+    '''
+
     def __init__(self, parent):
         super(DisclaimerDialog, self).__init__(parent)
 
@@ -221,7 +229,7 @@ class DisclaimerDialog(QtGui.QDialog):
         heading.setObjectName("dialogTitle")
         load_css_for_widget(heading, os.path.join(css_path, 'label.css'))
 
-        textview = self.addTextView()
+        textview = self.addTextEdit()
 
         self.checkbox = QtGui.QCheckBox('I still want to do this', self)
         self.checkbox.clicked.connect(self.enableButton)
@@ -257,9 +265,9 @@ class DisclaimerDialog(QtGui.QDialog):
     def enableButton(self):
         self.okButton.setEnabled(self.checkbox.isChecked())
 
-    def addTextView(self):
+    def addTextEdit(self):
         textEdit = QtGui.QTextEdit()
-        load_css_for_widget(textEdit, os.path.join(css_path, 'textview.css'))
+        load_css_for_widget(textEdit, os.path.join(css_path, 'textedit.css'))
 
         disclaimer_path = os.path.join(base_path, "DISCLAIMER")
         disclaimer_text = read_file_contents(disclaimer_path)
@@ -271,5 +279,12 @@ class DisclaimerDialog(QtGui.QDialog):
         return textEdit
 
     def accepted(self):
+        '''
+        This method is used by the BurnerGUI when the user clicks BURN!
+
+        We popup the dialog, wait for the user to click one of the buttons,
+        and return whether the user accepted the disclaimer.
+        '''
+
         response = self.exec_()
         return response == QtGui.QDialog.Accepted

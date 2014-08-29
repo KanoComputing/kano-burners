@@ -1,12 +1,18 @@
 /*
-# textview.css
+# textedit.css
 #
 # Copyright (C) 2014 Kano Computing Ltd.
 # License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
 #
-# [File description]
+#
+# CSS styling for TextEdits
+#
+# Text edits which have set this stylesheet will have a
+# larger text size, and a gray text color.
 */
 
+
+/* Styling for all QTextEdit instances, including subclasses */
 QTextEdit {
     color: #555555;
     font-size: 18px;

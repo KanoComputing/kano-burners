@@ -40,37 +40,41 @@ QPushButton:disabled {
 }
 
 
+/* Styling for the Dialog OK button */
 QPushButton#dialogOk {
     background-color: #7cc640;
     color: white;
 }
 
+/* Styling for the Dialog OK button when it is pressed */
 QPushButton#dialogOk:pressed {
     background-color: #6DB038;
 }
 
-/* Styling for when hovering over but not pressing the button */
+/* Styling for the Dialog OK button when mouse is over and not being pressed */
 QPushButton#dialogOk:hover:!pressed {
     background-color: #91DD54;
 }
 
-/* Styling for when the button is disabled */
-QPushButton:disabled#dialogOk {
+/* Styling for the Dialog OK button when it is disabled */
+QPushButton#dialogOk:disabled {
     background-color: #dddddd;
     color: white;
 }
 
 
+/* Styling for the Dialog CANCEL button */
 QPushButton#dialogCancel {
     background-color: #f37677;
     color: white;
 }
 
+/* Styling for the Dialog CANCEL button when it is pressed */
 QPushButton#dialogCancel:pressed {
     background-color: #D55555;
 }
 
-/* Styling for when hovering over but not pressing the button */
+/* Styling for the Dialog CANCEL button when mouse is over and not being pressed */
 QPushButton#dialogCancel:hover:!pressed {
     background-color: #FF9494;
 }

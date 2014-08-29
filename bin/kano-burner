@@ -116,11 +116,14 @@ class BurnerGUI(UI):
     # @Override
     # This method is called when the BURN! button is clicked
     def onStartClick(self):
-        # Launch disclaimer dialog
+        # launch disclaimer dialog - the accepted() method returns
+        # when the user clicks one of the buttons in the dialog
         disclaimer = DisclaimerDialog(self)
         if not disclaimer.accepted():
-            self.onRetryClick()
-            return
+            debugger('Disclaimer was canceled, refreshing')
+            return self.onRetryClick()
+
+        debugger('Disclaimer was accepted, starting process')
 
         # the button is disabled until the user selects a disk - we can safely proceed
         # grab the disk id e.g. osx: /dev/disk1 and switch screen to progressScreen

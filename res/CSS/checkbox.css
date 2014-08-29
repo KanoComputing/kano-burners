@@ -4,9 +4,15 @@
 # Copyright (C) 2014 Kano Computing Ltd.
 # License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
 #
-# [File description]
+#
+# CSS styling for CheckBoxes
+#
+# Check boxes which have set this stylesheet will have a
+# larger text size, and a gray text color.
 */
 
+
+/* Styling for all QButton instances, including subclasses */
 QCheckBox {
     font-size: 18px;
     font-family: Bariol;
