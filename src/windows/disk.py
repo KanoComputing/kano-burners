@@ -18,7 +18,7 @@
 #
 # Tools used: wmic, diskpart, mountvol, dd.exe, nircmd.exe
 
-
+import time
 from src.common.utils import run_cmd_no_pipe, write_file_contents, debugger, BYTES_IN_GIGABYTE
 from src.common.paths import _dd_path, _nircmd_path
 
@@ -136,6 +136,7 @@ def get_disk_mount(disk_id):
     # run the created diskpart script
     cmd = 'diskpart /s {}'.format(TEMP_DIR + "detail_disk.txt")
     output, error, return_code = run_cmd_no_pipe(cmd)
+    time.sleep(15)
 
     if not return_code:
         debugger('Ran diskpart detail script')
@@ -181,7 +182,7 @@ def close_all_explorer_windows():
 
 
 def test_write(disk_mount):
-    cmd = '{}\\dd.exe if=/dev/random of=\\\\.\\{}: bs=4M count=10'.format(_dd_path, disk_mount)
+    cmd = '{}\\dd.exe if=/dev/random od={}: bs=4M count=10'.format(_dd_path, disk_mount)
     _, output, return_code = run_cmd_no_pipe(cmd)
 
     if not return_code:
@@ -237,6 +238,7 @@ def format_disk(disk_id):
     # run the created diskpart script
     cmd = 'diskpart /s {}'.format(TEMP_DIR + "format_disk.txt")
     _, error, return_code = run_cmd_no_pipe(cmd)
+    time.sleep(15)
 
     if not return_code:
         debugger('Formatted disk {} with diskpart'.format(id))
