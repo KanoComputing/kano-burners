@@ -200,7 +200,7 @@ class BurnerBackendThread(QtCore.QThread):
         super(BurnerBackendThread, self).__init__(parent)
         self.selected_disk = disk
 
-    def checkDisk(self, ):
+    def checkDisk(self):
         debugger('Checking selected_disk is in list')
         disk_list = get_disks_list()
 
