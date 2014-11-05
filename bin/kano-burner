@@ -41,7 +41,7 @@ from src.common.ui import UI
 from src.common.widgets import DisclaimerDialog
 from src.common.download import download_kano_os
 from src.common.utils import delete_dir, make_dir, debugger
-from src.common.errors import NO_DISKS_ERROR
+from src.common.errors import NO_DISKS_ERROR, BURN_ERROR
 
 
 # the directory where we'll download the OS
@@ -125,9 +125,10 @@ class BurnerGUI(UI):
 
         debugger('Disclaimer was accepted, starting process')
 
-        # the button is disabled until the user selects a disk - we can safely proceed
-        # grab the disk id e.g. osx: /dev/disk1 and switch screen to progressScreen
-        selected_disk = self.disks[self.disksComboBox.currentIndex()]['id']
+        # the button is disabled until the user selects a disk.
+        # We grab all the information about the disk to check it remains the same
+        selected_disk = self.disks[self.disksComboBox.currentIndex()]
+
         self.showScreen(self.progressScreen)
 
         # thread to download and burn the image
@@ -199,6 +200,16 @@ class BurnerBackendThread(QtCore.QThread):
         super(BurnerBackendThread, self).__init__(parent)
         self.selected_disk = disk
 
+    def checkDisk(self, ):
+        debugger('Checking selected_disk is in list')
+        disk_list = get_disks_list()
+
+        if not self.selected_disk in disk_list:
+            debugger("ERROR, DISKS DON'T MATCH")
+            debugger("selected_disk = {}".format(self.selected_disk))
+            debugger("disk_list = {}".format(disk_list))
+            self.showFinish(BURN_ERROR)
+
     def showStage(self, text):
         # this signal sets the Title label e.g. Downloading Kano OS..
         self.notifyStage.emit(text)
@@ -218,6 +229,7 @@ class BurnerBackendThread(QtCore.QThread):
 
     def run(self):
         global TEMP_DIR
+        self.checkDisk()
 
         # Step 1: download the latest Kano OS image
         # the process returns a dict with the info about the latest OS release
@@ -230,17 +242,19 @@ class BurnerBackendThread(QtCore.QThread):
             debugger('Removing temp files')
             delete_dir(TEMP_DIR)
             return
+        self.checkDisk()
 
         # Step 2: preparing the disk (unmounting, formatting, etc)
         # this process differs slightly depending on the platform running it
-        debugger('Preparing {} for burning..'.format(self.selected_disk))
+        debugger('Preparing {} for burning..'.format(self.selected_disk['id']))
         self.showStage('Preparing disk for burning..')
-        prepare_disk(self.selected_disk, self.showDescription)
+        prepare_disk(self.selected_disk["id"], self.showDescription)
+        self.checkDisk()
 
         # Step 3: burn the OS image onto the selected disk
-        debugger('Burning image to SD card on ' + self.selected_disk)
+        debugger('Burning image to SD card on ' + self.selected_disk['id'])
         self.showStage('Burning Kano OS..')
-        error = start_burn_process(TEMP_DIR, os_info, self.selected_disk, self.showProgress)
+        error = start_burn_process(TEMP_DIR, os_info, self.selected_disk['id'], self.showProgress)
         if error:
             self.showFinish(error)
             return
@@ -250,7 +264,7 @@ class BurnerBackendThread(QtCore.QThread):
         debugger('Ejecting disk..')
         self.showStage('Waiting for things to settle..')
         time.sleep(5)  # wait for dd to mount the disk back
-        eject_disk(self.selected_disk)
+        eject_disk(self.selected_disk['id'])
 
         # Finally, show success messsage, notify UI of finish, and return an empty error
         self.showStage("Kano OS has successfully been burned. Let's go!")
