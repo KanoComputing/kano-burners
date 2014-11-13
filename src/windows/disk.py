@@ -60,8 +60,8 @@ def get_disks_list():
             # grab the disk id from e.g. \\.\PHYSICALDRIVE[0] and use Partition0
             # which for dd is the entire disk, not some partition on the disk
             drive_loc = output_lines[index].lower().find('physicaldrive') + len('physicaldrive')
-            id = output_lines[index][drive_loc:]
-            disk_id = "\\\\?\\Device\\Harddisk{}\\Partition0".format(id)
+            id_num = output_lines[index][drive_loc:]
+            disk_id = "\\\\?\\Device\\Harddisk{}\\Partition0".format(id_num)
 
             # for the disk model, remove the last word which is always 'device'
             model = output_lines[index + 1].split('=')[1]
