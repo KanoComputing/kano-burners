@@ -124,8 +124,15 @@ def get_latest_os_info():
         debugger('Latest Kano OS image is {}'.format(latest_json['filename']))
         time.sleep(1)
 
+        image_url = '{base_url}{filename}'.format(
+            base_url=latest_json['base_url'],
+            filename=latest_json['filename'])
+
+        gz_url = '{image_url}.gz'.format(image_url=image_url)
+
         # use the url for the latest os version to get info about the image
-        response = urllib2.urlopen(latest_json['url'] + '.json')
+        image_info_json = '{image_url}.json'.format(image_url=image_url)
+        response = urllib2.urlopen(image_info_json)
         os_json = json.load(response)
 
         # give the server some time to breathe between requests
@@ -135,6 +142,11 @@ def get_latest_os_info():
         debugger('[ERROR] Downloading OS info failed')
         return None
 
-    # merge the two jsons and return a single info dict result
-    os_info = {key: value for (key, value) in (latest_json.items() + os_json.items())}
+    # merge the two jsons, add derived values and return a single info dict
+    os_info = dict(latest_json.items() + os_json.items() +
+                   [
+                       ('image_url', image_url),
+                       ('url', gz_url)
+                   ])
+
     return os_info
