@@ -38,7 +38,7 @@ def debugger(text):
 
 
 def run_cmd(cmd):
-    process = subprocess.Popen(cmd, shell=True, env={'LANG':'C'},
+    process = subprocess.Popen(cmd, shell=True, env={'LC_ALL':'C'},
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                preexec_fn=restore_signals)
 
