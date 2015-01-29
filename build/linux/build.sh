@@ -6,7 +6,7 @@
 # License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
 #
 #
-# OSX build script
+# Linux build script
 #
 # This script calls PyInstaller to build Kano Burner
 # from the generated .spec file obtained by running
