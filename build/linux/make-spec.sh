@@ -6,7 +6,7 @@
 # License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
 #
 #
-# OSX PyInstaller .spec file generator
+# Linux PyInstaller .spec file generator
 #
 # This is the first script to run as part of the build process.
 #
