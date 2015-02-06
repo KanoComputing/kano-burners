@@ -19,9 +19,9 @@
 
 
 pyinstaller ^
-    --distpath=%HomePath%"\Desktop\Kano Burner" ^
-    --specpath=%HomePath%"\Desktop\Kano Burner\build" ^
-    --workpath=%HomePath%"\Desktop\Kano Burner\build" ^
+    --distpath="..\app\Kano Burner" ^
+    --specpath="..\app\Kano Burner\build" ^
+    --workpath="..\app\Kano Burner\build" ^
     --clean ^
     --noconfirm ^
     "Kano Burner.spec"

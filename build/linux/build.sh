@@ -22,9 +22,9 @@
 
 
 pyinstaller \
-    --distpath=~/Desktop/Kano\ Burner/ \
-    --specpath=~/Desktop/Kano\ Burner/build/ \
-    --workpath=~/Desktop/Kano\ Burner/build/ \
+    --distpath=../app/Kano\ Burner/ \
+    --specpath=../app/Kano\ Burner/build/ \
+    --workpath=../app/Kano\ Burner/build/ \
     --clean \
     --noconfirm \
     Kano\ Burner.spec
