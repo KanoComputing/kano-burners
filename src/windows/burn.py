@@ -21,7 +21,7 @@ import time
 import subprocess
 
 from src.common.errors import BURN_ERROR
-from src.common.utils import calculate_eta, debugger, BYTES_IN_MEGABYTE
+from src.common.utils import run_cmd_no_pipe, calculate_eta, debugger, BYTES_IN_MEGABYTE
 from src.common.paths import _7zip_path, _dd_path
 
 
@@ -37,7 +37,10 @@ def start_burn_process(path, os_info, disk, report_progress_ui):
     '''
 
     # Set the progress to 0% on the UI progressbar, and write what we're up to
-    report_progress_ui(0, 'preparing to burn OS image..')
+    report_progress_ui(0, 'unzipping Kano OS archive..')
+
+    # unzip the archive before burning
+    unzip_kano_os(path + os_info['filename'] + '.gz', path)
 
     # the Windows version of dd can easily output writing progress, unlike OSX and Linux
     # so we do not need multithreading and progress polling
@@ -50,8 +53,18 @@ def start_burn_process(path, os_info, disk, report_progress_ui):
         return None
 
 
+def unzip_kano_os(os_path, dest_path):
+    cmd = '"{}\\7za.exe" e "{}" -o"{}"'.format(_7zip_path, os_path, dest_path)
+    _, output, return_code = run_cmd_no_pipe(cmd)
+
+    if not return_code:
+        debugger('Unzipped Kano OS successfully')
+    else:
+        debugger('[ERROR]: ' + output.strip('\n'))
+
+
 def burn_kano_os(os_path, disk, size, report_progress_ui):
-    cmd = '"{}\\7za.exe" e -so "{}" | "{}\\dd.exe" of="{}" bs=4M --progress'.format(_7zip_path, os_path, _dd_path, disk)
+    cmd = '"{}\\dd.exe" if="{}" of="{}" bs=4M --progress'.format(_dd_path, os_path, disk)
     # all handles (in, out, err) need to be set due to PyInstaller bundling
     process = subprocess.Popen(cmd, shell=True, universal_newlines=True,
                                stdin=subprocess.PIPE, stdout=subprocess.PIPE,
