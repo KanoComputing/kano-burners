@@ -22,7 +22,7 @@
 import time
 
 from src.common.utils import run_cmd_no_pipe, write_file_contents, debugger, BYTES_IN_GIGABYTE
-from src.common.paths import _dd_path, _nircmd_path
+from src.common.paths import _nircmd_path
 
 
 def get_disks_list():
@@ -86,7 +86,7 @@ def get_disks_list():
             }
 
             # make sure we do not list any potential hard drive or too small SD card
-            if disk['size'] < 3.5 or disk['size'] > 64 or disk['size'] == -1:
+            if disk['size'] < 3.5 or disk['size'] > 64.5 or disk['size'] == -1:
                 debugger('Ignoring {}'.format(disk))
             else:
                 debugger('Listing {}'.format(disk))
@@ -103,75 +103,14 @@ def prepare_disk(disk_id, report_ui):
     for writing with dd and getting passed denial of access.
     '''
 
-    report_ui('retrieving mount point and disk volume..')
-    # disk_mount = get_disk_mount(disk_id)
-    # disk_volume = get_disk_volume(disk_id, disk_mount)
-
     report_ui('closing all Explorer windows')
     close_all_explorer_windows()
 
     report_ui('formatting the disk')
     format_disk(disk_id)
 
-    # Make SURE this is needed BEFORE uncommenting! READ warning!
-    # report_ui('unmounting disk')
-    # unmount_disk(disk_mount)
-
-    report_ui('testing writing to disk')
-    # test_write(disk_mount)
-
     # hopefully, the disk should be 'enabled' at this point and
     # dd should have no trouble to write the OS to Partition0
-
-
-def get_disk_mount(disk_id):
-    TEMP_DIR = 'C:\\temp\\kano-burner\\'
-    disk_mount = ''   # mount point e.g. C:\ or D:\
-
-    # extract the id of the physical disk, required by diskpart
-    # e.g. \\?\Device\Harddisk[id]\Partition0
-    id = int(disk_id.split("Harddisk")[1][0])  # access by string index alone is dangerous!
-
-    # create a diskpart script to find the mount point for the given disk
-    diskpart_detail_script = 'select disk {} \ndetail disk'.format(id)
-    write_file_contents(TEMP_DIR + "detail_disk.txt", diskpart_detail_script)
-
-    # run the created diskpart script
-    cmd = 'diskpart /s {}'.format(TEMP_DIR + "detail_disk.txt")
-    output, error, return_code = run_cmd_no_pipe(cmd)
-    time.sleep(15)  # diskpart requiest a timeout between calls
-
-    if not return_code:
-        debugger('Ran diskpart detail script')
-    else:
-        debugger('[ERROR] ' + error.strip('\n'))
-        return
-
-    # now the mount point is the third word on the last line of the output
-    disk_mount = output.splitlines()[-1].split()[2]
-
-    return disk_mount
-
-
-# This function is not currently being used
-def get_disk_volume(disk_id, disk_mount):
-    disk_volume = ''  # a unique ID e.g. \\?\Volume{5fd765ff-068e-11e4-bc8d-806e6f6e6963}\
-
-    # we now need to link the mount point to the volume id that is actually used
-    cmd = '{}\\dd.exe --list'.format(_dd_path)
-    _, output, return_code = run_cmd_no_pipe(cmd)
-
-    # we will process the output line by line to find the line containing the mount point
-    # the line at [index - 3] from the respective one contains the volume id
-    output_lines = output.splitlines()
-    disk_mount_dd = '\\\\.\\{}:'.format(disk_mount.lower())
-
-    for index in range(0, len(output_lines)):
-        if disk_mount_dd in output_lines[index]:
-            disk_volume = output_lines[index - 3].strip()
-            break
-
-    return disk_volume
 
 
 def close_all_explorer_windows():
@@ -180,48 +119,6 @@ def close_all_explorer_windows():
 
     if not return_code:
         debugger('Closed all Explorer windows')
-    else:
-        debugger('[ERROR]: ' + error.strip('\n'))
-
-
-def test_write(disk_mount):
-    cmd = '{}\\dd.exe if=/dev/random of=\\\\.\\{}: bs=4M count=10'.format(_dd_path, disk_mount)
-    _, output, return_code = run_cmd_no_pipe(cmd)
-
-    if not return_code:
-        debugger('Written 40M random data to {}:\\'.format(disk_mount))
-    else:
-        debugger('[ERROR]: ' + output.strip('\n'))
-
-
-# This function is not currently being used
-# WARNING: If this function is called make sure mount_disk() is executed!
-#          Otherwise, the mount point will remain removed from the volume directory!
-#          This is a persistent change and CANNOT be fixed by a reboot!
-def unmount_disk(disk_mount):
-    cmd = "mountvol {}:\\ /D".format(disk_mount)
-    error, _, return_code = run_cmd_no_pipe(cmd)
-
-    if not return_code:
-        debugger('{}:\\ successfully unmounted'.format(disk_mount))
-    else:
-        debugger('[ERROR]: ' + error.strip('\n'))
-
-
-# This function is not currently being used - WORK IN PROGRESS
-# WARNING: If unmount_disk() was called, make sure this function is executed!
-#          Otherwise, the mount point will remain removed from the volume directory!
-#          This is a persistent change and CANNOT be fixed by a reboot!
-def mount_disk(disk_id):
-    # the following may not work if the disk has been unmounted, consider caching
-    disk_mount = get_disk_mount(disk_id)
-    disk_volume = get_disk_volume(disk_id, disk_mount)
-
-    cmd = "mountvol {}:\\ {}".format(disk_mount, disk_volume)
-    _, error, return_code = run_cmd_no_pipe(cmd)
-
-    if not return_code:
-        debugger('{} successfully mounted'.format(disk_mount))
     else:
         debugger('[ERROR]: ' + error.strip('\n'))
 
@@ -241,7 +138,7 @@ def format_disk(disk_id):
     # run the created diskpart script
     cmd = 'diskpart /s {}'.format(TEMP_DIR + "format_disk.txt")
     _, error, return_code = run_cmd_no_pipe(cmd)
-    time.sleep(15)  # diskpart requiest a timeout between calls
+    time.sleep(15)  # diskpart requires a timeout between calls
 
     if not return_code:
         debugger('Formatted disk {} with diskpart'.format(id))
