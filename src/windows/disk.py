@@ -19,6 +19,8 @@
 # Tools used: wmic, diskpart, mountvol, dd.exe, nircmd.exe
 
 
+import time
+
 from src.common.utils import run_cmd_no_pipe, write_file_contents, debugger, BYTES_IN_GIGABYTE
 from src.common.paths import _dd_path, _nircmd_path
 
@@ -101,7 +103,7 @@ def prepare_disk(disk_id, report_ui):
     '''
 
     report_ui('retrieving mount point and disk volume..')
-    disk_mount = get_disk_mount(disk_id)
+    # disk_mount = get_disk_mount(disk_id)
     # disk_volume = get_disk_volume(disk_id, disk_mount)
 
     report_ui('closing all Explorer windows')
@@ -115,7 +117,7 @@ def prepare_disk(disk_id, report_ui):
     # unmount_disk(disk_mount)
 
     report_ui('testing writing to disk')
-    test_write(disk_mount)
+    # test_write(disk_mount)
 
     # hopefully, the disk should be 'enabled' at this point and
     # dd should have no trouble to write the OS to Partition0
@@ -136,6 +138,7 @@ def get_disk_mount(disk_id):
     # run the created diskpart script
     cmd = 'diskpart /s {}'.format(TEMP_DIR + "detail_disk.txt")
     output, error, return_code = run_cmd_no_pipe(cmd)
+    time.sleep(15)  # diskpart requiest a timeout between calls
 
     if not return_code:
         debugger('Ran diskpart detail script')
@@ -237,6 +240,7 @@ def format_disk(disk_id):
     # run the created diskpart script
     cmd = 'diskpart /s {}'.format(TEMP_DIR + "format_disk.txt")
     _, error, return_code = run_cmd_no_pipe(cmd)
+    time.sleep(15)  # diskpart requiest a timeout between calls
 
     if not return_code:
         debugger('Formatted disk {} with diskpart'.format(id))
