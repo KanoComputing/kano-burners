@@ -21,7 +21,7 @@ from src.common.errors import INTERNET_ERROR, TOOLS_ERROR, FREE_SPACE_ERROR
 
 
 # TODO: grab this value with pySmartDL
-REQUIRED_MB = 600  # MB necessary free space
+REQUIRED_MB = 700  # MB necessary free space
 
 
 def request_admin_privileges():
