@@ -14,11 +14,14 @@
 
 
 import os
-import subprocess
-import signal
+import sys
 import shutil
+import signal
+import subprocess
 from urllib2 import urlopen
 from PyQt4 import QtCore
+
+from src.common.paths import temp_path
 
 
 # Conversion constants
@@ -31,9 +34,13 @@ BYTES_IN_GIGABYTE = 1000000000
 LATEST_OS_INFO_URL = 'http://downloads.kano.me/public/latest.json'
 
 
-# This should be FALSE when building for distribution
 def debugger(text):
-    if True:
+    # if we are running from a PyInstaller bundle, print debug to file
+    if getattr(sys, 'frozen', False):
+        with open(os.path.join(temp_path, 'debug.txt'), "a") as debug_file:
+            debug_file.write(text + '\n')
+    # otherwise, print debug to stdout
+    else:
         print text
 
 
@@ -83,7 +90,7 @@ def read_file_contents(path):
             return '\n'.join(lines)
 
 
-def write_file_contents(path, data):
+def write_file_contents(data, path):
     with open(path, 'w') as outfile:
         outfile.write(data)
 

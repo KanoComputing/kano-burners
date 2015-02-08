@@ -18,6 +18,7 @@
 
 from src.common.utils import run_cmd, is_internet, debugger, BYTES_IN_MEGABYTE
 from src.common.errors import INTERNET_ERROR, TOOLS_ERROR, FREE_SPACE_ERROR
+from src.common.paths import temp_path
 
 
 # TODO: grab this value with pySmartDL
@@ -29,7 +30,7 @@ def request_admin_privileges():
     pass
 
 
-def check_dependencies(tmp_dir):
+def check_dependencies():
     '''
     This method is used by the BurnerGUI at the start
     of the application and on a retry.
@@ -50,7 +51,7 @@ def check_dependencies(tmp_dir):
         return TOOLS_ERROR
 
     # making sure we have enough space to download OS
-    if is_sufficient_space(tmp_dir, REQUIRED_MB):
+    if is_sufficient_space():
         debugger('Sufficient available space')
     else:
         debugger('Insufficient available space (min {} MB)'.format(REQUIRED_MB))
@@ -92,8 +93,8 @@ def is_installed(programs_list):
     return len(output.split()) == len(programs_list)
 
 
-def is_sufficient_space(path, required_mb):
-    cmd = "df %s | grep -v 'Available' | awk '{print $4}'" % path
+def is_sufficient_space():
+    cmd = "df %s | grep -v 'Available' | awk '{print $4}'" % temp_path
     output, _, _ = run_cmd(cmd)
 
     try:
@@ -102,5 +103,5 @@ def is_sufficient_space(path, required_mb):
         debugger('[ERROR] Failed parsing the line ' + output)
         return True
 
-    debugger('Free space {0:.2f} MB in {1}'.format(free_space_mb, path))
-    return free_space_mb > required_mb
+    debugger('Free space {0:.2f} MB in {1}'.format(free_space_mb, temp_path))
+    return free_space_mb > REQUIRED_MB

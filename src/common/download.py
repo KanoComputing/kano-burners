@@ -26,6 +26,7 @@ import traceback
 from src.common.pySmartDL.pySmartDL import SmartDL, HashFailedException
 from src.common.utils import debugger, LATEST_OS_INFO_URL
 from src.common.errors import DOWNLOAD_ERROR, MD5_ERROR
+from src.common.paths import temp_path
 
 
 class Downloader(SmartDL):
@@ -50,7 +51,7 @@ class Downloader(SmartDL):
         return not self._killed and SmartDL.isFinished(self)
 
 
-def download_kano_os(path, report_progress_ui):
+def download_kano_os(report_progress_ui):
     '''
     This method is used by the backendThread to download Kano OS.
 
@@ -70,7 +71,7 @@ def download_kano_os(path, report_progress_ui):
     # the documentation is misleading - if non blocking mode is used,
     # pySmartDL may still throw exceptions
     try:
-        downloader = Downloader(os_info['url'], dest=path, progress_bar=False)
+        downloader = Downloader(os_info['url'], dest=temp_path, progress_bar=False)
         # simply make sure the file was not corrupted - not for cryptographic security
         downloader.add_hash_verification('md5', os_info['compressed_md5'])
         downloader.start(blocking=False)

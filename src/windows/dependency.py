@@ -22,8 +22,8 @@ import win32con
 import win32com.shell.shell as shell
 
 from src.common.utils import run_cmd_no_pipe, is_internet, debugger, BYTES_IN_MEGABYTE
-from src.common.paths import _7zip_path, _dd_path, _nircmd_path
 from src.common.errors import INTERNET_ERROR, TOOLS_ERROR, FREE_SPACE_ERROR
+from src.common.paths import _7zip_path, _dd_path, _nircmd_path, temp_path
 
 
 # TODO: grab this value with pySmartDL
@@ -41,7 +41,7 @@ def request_admin_privileges():
         sys.exit(0)
 
 
-def check_dependencies(tmp_dir):
+def check_dependencies():
     '''
     This method is used by the BurnerGUI at the start
     of the application and on a retry.
@@ -62,7 +62,7 @@ def check_dependencies(tmp_dir):
         return TOOLS_ERROR
 
     # making sure we have enough space to download OS
-    if is_sufficient_space(tmp_dir, REQUIRED_MB):
+    if is_sufficient_space():
         debugger('Sufficient available space')
     else:
         debugger('Insufficient available space (min {} MB)'.format(REQUIRED_MB))
@@ -104,8 +104,8 @@ def is_installed(programs_list):
     return programs_found == len(programs_list)
 
 
-def is_sufficient_space(path, required_mb):
-    cmd = "dir {}".format(path)
+def is_sufficient_space():
+    cmd = "dir {}".format(temp_path)
     output, _, _ = run_cmd_no_pipe(cmd)
 
     try:
@@ -118,5 +118,5 @@ def is_sufficient_space(path, required_mb):
         debugger('[ERROR] Failed parsing the line ' + output)
         return True
 
-    debugger('Free space {0:.2f} MB in {1}'.format(free_space_mb, path))
-    return free_space_mb > required_mb
+    debugger('Free space {0:.2f} MB in {1}'.format(free_space_mb, temp_path))
+    return free_space_mb > REQUIRED_MB

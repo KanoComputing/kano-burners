@@ -19,10 +19,11 @@
 # Tools used: wmic, diskpart, mountvol, dd.exe, nircmd.exe
 
 
+import os
 import time
 
 from src.common.utils import run_cmd_no_pipe, write_file_contents, debugger, BYTES_IN_GIGABYTE
-from src.common.paths import _nircmd_path
+from src.common.paths import _nircmd_path, temp_path
 
 
 def get_disks_list():
@@ -125,7 +126,6 @@ def close_all_explorer_windows():
 
 def format_disk(disk_id):
     # TODO: look into cmd = 'format {}: /Q /X'.format(disk_mount)
-    TEMP_DIR = 'C:\\temp\\kano-burner\\'
 
     # extract the id of the physical disk, required by diskpart
     # e.g. \\?\Device\Harddisk[id]\Partition0
@@ -133,10 +133,11 @@ def format_disk(disk_id):
 
     # create a diskpart script to format the given disk
     diskpart_format_script = 'select disk {} \nclean'.format(id)
-    write_file_contents(TEMP_DIR + "format_disk.txt", diskpart_format_script)
+    diskpart_script_path = os.path.join(temp_path, "format_disk.txt")
+    write_file_contents(diskpart_format_script, diskpart_script_path)
 
     # run the created diskpart script
-    cmd = 'diskpart /s {}'.format(TEMP_DIR + "format_disk.txt")
+    cmd = 'diskpart /s {}'.format(diskpart_script_path)
     _, error, return_code = run_cmd_no_pipe(cmd)
     time.sleep(15)  # diskpart requires a timeout between calls
 

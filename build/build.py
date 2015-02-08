@@ -78,7 +78,7 @@ def read_file_lines(path):
             return lines
 
 
-def write_file_contents(path, data):
+def write_file_contents(data, path):
     with open(path, 'w') as outfile:
         outfile.write(data)
 
@@ -136,7 +136,7 @@ for index in range(0, len(spec_lines)):
         passed_analysis = True
 
 # save the new .spec file
-write_file_contents('Kano Burner.spec', ''.join(spec_lines))
+write_file_contents(''.join(spec_lines), 'Kano Burner.spec')
 
 
 # Step 3: Run PyInstaller build script with the .spec file

@@ -8,7 +8,7 @@
 #
 # This is the python executable which launches Kano Burner.
 #
-# Firstly, it detects the OS it is runnin on - Mac OSX, Linux, or Windows
+# Firstly, it detects the OS it is running on - Mac OSX, Linux, or Windows
 # and then it imports the appropriate modules. It is the only place we detect the OS.
 #
 # We use two classes to distinguish between front-end and back-end.
@@ -40,12 +40,9 @@ from PyQt4 import QtGui, QtCore
 from src.common.ui import UI
 from src.common.widgets import DisclaimerDialog
 from src.common.download import download_kano_os
-from src.common.utils import delete_dir, make_dir, debugger
+from src.common.utils import delete_dir, debugger
 from src.common.errors import NO_DISKS_ERROR
-
-
-# the directory where we'll download the OS
-TEMP_DIR = ''  # set when detecting the platform and updated when a folder is created
+from src.common.paths import temp_path
 
 
 # Detect OS platform and import appropriate modules
@@ -54,21 +51,18 @@ if platform.system() == 'Darwin':
     from src.osx.burn import start_burn_process
     from src.osx.disk import get_disks_list, prepare_disk, eject_disk
     from src.osx.dependency import check_dependencies, request_admin_privileges
-    TEMP_DIR = '/tmp/kano-burner/'
 
 elif platform.system() == 'Linux':
     debugger('Linux OS detected')
     from src.linux.burn import start_burn_process
     from src.linux.disk import get_disks_list, prepare_disk, eject_disk
     from src.linux.dependency import check_dependencies, request_admin_privileges
-    TEMP_DIR = '/tmp/kano-burner/'
 
 elif platform.system() == 'Windows':
     debugger('Windows OS detected')
     from src.windows.burn import start_burn_process
     from src.windows.disk import get_disks_list, prepare_disk, eject_disk
     from src.windows.dependency import check_dependencies, request_admin_privileges
-    TEMP_DIR = 'C:\\temp\\kano-burner\\'
 
 
 class BurnerGUI(UI):
@@ -84,13 +78,9 @@ class BurnerGUI(UI):
     # @Override
     # This method is called when the application is launched
     def onStart(self):
-        # make the temp directory to hold the downloaded image
-        debugger('Making temp directory')
-        make_dir(TEMP_DIR)
-
         # check if dependencies are met
         debugger('Checking for dependencies..')
-        error = check_dependencies(TEMP_DIR)
+        error = check_dependencies()
         if error:
             self.showError(error)
 
@@ -170,7 +160,7 @@ class BurnerGUI(UI):
     # This method is called when the application is closing
     def onFinish(self):
         debugger('Removing temp files')
-        delete_dir(TEMP_DIR)
+        delete_dir(temp_path)  # only useful when running from source
 
 
 class BurnerBackendThread(QtCore.QThread):
@@ -217,18 +207,16 @@ class BurnerBackendThread(QtCore.QThread):
         self.notifyFinish.emit(error)
 
     def run(self):
-        global TEMP_DIR
-
         # Step 1: download the latest Kano OS image
         # the process returns a dict with the info about the latest OS release
         # e.g. file name, md5, size..
         debugger('Downloading Kano OS..')
         self.showStage('Downloading Kano OS..')
-        os_info, error = download_kano_os(TEMP_DIR, self.showProgress)
+        os_info, error = download_kano_os(self.showProgress)
         if error:
             self.showFinish(error)
             debugger('Removing temp files')
-            delete_dir(TEMP_DIR)
+            delete_dir(temp_path)
             return
 
         # Step 2: preparing the disk (unmounting, formatting, etc)
@@ -240,7 +228,7 @@ class BurnerBackendThread(QtCore.QThread):
         # Step 3: burn the OS image onto the selected disk
         debugger('Burning image to SD card on ' + self.selected_disk)
         self.showStage('Burning Kano OS..')
-        error = start_burn_process(TEMP_DIR, os_info, self.selected_disk, self.showProgress)
+        error = start_burn_process(os_info, self.selected_disk, self.showProgress)
         if error:
             self.showFinish(error)
             return
