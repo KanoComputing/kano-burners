@@ -20,7 +20,7 @@ import os
 from PyQt4 import QtGui
 from src.common.widgets import VerticalContainer
 from src.common.utils import load_css_for_widget
-from src.common.paths import images_path, css_path
+from src.common.paths import images_path, anim_path, css_path
 
 
 # App dimensions constants
@@ -64,7 +64,7 @@ class UI(QtGui.QWidget):
         self.center()
         self.setTheme()
         self.createScreens()
-        self.showScreen(self.introScreen)
+        self.showScreen(self.dependencyScreen)
         self.show()
         self.onStart()
 
@@ -99,12 +99,23 @@ class UI(QtGui.QWidget):
 
     def createScreens(self):
         # the screens will be positioned on the spacer of the main VerticalContainer
-        self.introScreen = self.createIntroScreen(0, 120)
+        self.dependencyScreen = self.createDependencyScreen(0, 120)
+        self.diskScreen = self.createDiskScreen(0, 120)
         self.progressScreen = self.createProgressScreen(0, 120)
         self.finishScreen = self.createFinishScreen(0, 120)
         self.errorScreen = self.createErrorScreen(0, 120)
 
-    def createIntroScreen(self, x, y):
+    def createDependencyScreen(self, x, y):
+        container = self.createContainer(x, y)
+
+        self.statusTitleLabel = container.addLabel("Checking for dependencies..", LABEL_CSS_TITLE)
+        self.statusDescriptionLabel = container.addLabel("looking for resources, tools, and free space", LABEL_CSS_DESCRIPTION)
+        container.addSpacer(20)
+        self.spinnerAnimation = container.addAnimation(os.path.join(anim_path, 'spinner_2_lines.gif'))
+        container.addSpacer(10)
+        return container
+
+    def createDiskScreen(self, x, y):
         container = self.createContainer(x, y)
 
         self.disksComboBox = container.addComboBox(self.onComboBoxClick, defaultItem='Select device')
@@ -146,7 +157,8 @@ class UI(QtGui.QWidget):
         return container
 
     def showScreen(self, screen):
-        self.introScreen.hide()
+        self.dependencyScreen.hide()
+        self.diskScreen.hide()
         self.progressScreen.hide()
         self.finishScreen.hide()
         self.errorScreen.hide()

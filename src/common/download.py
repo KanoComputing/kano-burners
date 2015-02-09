@@ -24,7 +24,7 @@ import urllib2
 import traceback
 
 from src.common.pySmartDL.pySmartDL import SmartDL, HashFailedException
-from src.common.utils import debugger, LATEST_OS_INFO_URL
+from src.common.utils import debugger, LATEST_OS_INFO_URL, BYTES_IN_MEGABYTE
 from src.common.errors import DOWNLOAD_ERROR, MD5_ERROR
 from src.common.paths import temp_path
 
@@ -145,3 +145,10 @@ def get_latest_os_info():
     # merge the two jsons, add derived values and return a single info dict
     os_info = dict(latest_json.items() + os_json.items())
     return os_info
+
+
+def get_required_mb():
+    os_info = get_latest_os_info()
+    required_bytes = os_info['compressed_size'] + os_info['uncompressed_size']
+
+    return required_bytes / BYTES_IN_MEGABYTE

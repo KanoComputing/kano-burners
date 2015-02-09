@@ -18,14 +18,12 @@
 
 import os
 import sys
+import math
 
+from src.common.download import get_latest_os_info
 from src.common.utils import run_cmd, is_internet, debugger, BYTES_IN_MEGABYTE
 from src.common.errors import INTERNET_ERROR, TOOLS_ERROR, FREE_SPACE_ERROR
 from src.common.paths import temp_path
-
-
-# TODO: grab this value with pySmartDL
-REQUIRED_MB = 700  # MB necessary free space
 
 
 def request_admin_privileges():
@@ -60,10 +58,11 @@ def check_dependencies():
         return TOOLS_ERROR
 
     # making sure we have enough space to download OS
-    if is_sufficient_space():
-        debugger('Sufficient available space')
+    required_mb = get_required_mb()
+    if is_sufficient_space(required_mb):
+        debugger('Sufficient available space (min {} MB)'.format(required_mb))
     else:
-        debugger('Insufficient available space (min {} MB)'.format(REQUIRED_MB))
+        debugger('Insufficient available space (min {} MB)'.format(required_mb))
         return FREE_SPACE_ERROR
 
     # everything is ok, return successful and no error
@@ -99,7 +98,19 @@ def is_installed(programs_list):
     return len(output.split()) == len(programs_list)
 
 
-def is_sufficient_space():
+def get_required_mb():
+    os_info = get_latest_os_info()
+
+    # on OSX, the burning process makes use of gzip to dd pipe
+    # so we require only the compressed size as free space
+    # we round this up to hundreds of MB to give some buffer
+    required_mb = os_info['compressed_size'] / BYTES_IN_MEGABYTE
+    required_mb = int(math.ceil(required_mb / 100.0) * 100.0)
+
+    return required_mb
+
+
+def is_sufficient_space(required_mb):
     cmd = "df %s | grep -v 'Available' | awk '{print $4}'" % temp_path
     output, _, _ = run_cmd(cmd)
 
@@ -110,4 +121,4 @@ def is_sufficient_space():
         return True
 
     debugger('Free space {0:.2f} MB in {1}'.format(free_space_mb, temp_path))
-    return free_space_mb > REQUIRED_MB
+    return free_space_mb > required_mb

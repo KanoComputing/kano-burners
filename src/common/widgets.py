@@ -169,6 +169,16 @@ class VerticalContainer(QtGui.QWidget):
         self.widgets.append(image)
         return image
 
+    def addAnimation(self, gifPath):
+        gifAnimation = QtGui.QLabel(self)
+        gifAnimation.setObjectName('animation')
+        load_css_for_widget(gifAnimation, os.path.join(css_path, 'label.css'))
+        gif = QtGui.QMovie(gifPath)
+        gifAnimation.setMovie(gif)
+        gif.start()
+        self.widgets.append(gifAnimation)
+        return gifAnimation
+
     def addComboBox(self, onClick, defaultItem=None):
         comboBox = ComboBox(self, defaultItem)
         comboBox.clicked.connect(onClick)

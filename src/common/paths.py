@@ -35,6 +35,7 @@ if not os.path.exists(temp_path):
 # setting Resources paths - css and images
 res_path = os.path.join(base_path, 'res')
 images_path = os.path.join(res_path, 'images')
+anim_path = os.path.join(res_path, 'animations')
 css_path = os.path.join(res_path, 'CSS')
 
 # setting Windows Tools paths
