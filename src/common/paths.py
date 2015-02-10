@@ -17,13 +17,12 @@ import os
 import sys
 
 
-# the current working directory differs when a
-# we are running from a PyInstaller bundle
+# the current working directory differs when we are running from a PyInstaller bundle
 if getattr(sys, 'frozen', False):
-    # debugger('Running from PyInstaller bundle')
+    # running from PyInstaller bundle
     base_path = os.path.abspath(sys._MEIPASS)
 else:
-    # debugger('Running from source')
+    # running from source
     base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 
 
