@@ -193,11 +193,11 @@ class BurnerDependencyThread(QtCore.QThread):
 
     def run(self):
         error = check_dependencies()
+
         if error:
             self.showFinish(error)
-
-        # no error has occured, so we return an empty dict
-        self.notifyFinish.emit(dict())
+        else:
+            self.notifyFinish.emit(dict())
 
 
 class BurnerBackendThread(QtCore.QThread):

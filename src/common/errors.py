@@ -31,6 +31,10 @@ DOWNLOAD_ERROR = {
     'title': 'There was an error downloading Kano OS..',
     'description': 'Please check your internet connection or try again later'
 }
+SERVER_DOWN_ERROR = {
+    'title': 'Our servers seem to be down.. :(',
+    'description': 'We apologise for the inconvenience. Please try again later.'
+}
 MD5_ERROR = {
     'title': 'Could not verify download integrity..',
     'description': 'Kano OS download may have been corrupted - please try again'

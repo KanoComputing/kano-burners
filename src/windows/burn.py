@@ -41,11 +41,12 @@ def start_burn_process(os_info, disk, report_progress_ui):
     report_progress_ui(0, 'unzipping Kano OS archive..')
 
     # unzip the archive before burning
-    os_path = os.path.join(temp_path, os_info['filename'])
-    unzip_kano_os(os_path, temp_path)
+    os_archive = os.path.join(temp_path, os_info['archive'])
+    unzip_kano_os(os_archive, temp_path)
 
     # the Windows version of dd can easily output writing progress, unlike OSX and Linux
     # so we do not need multithreading and progress polling
+    os_path = os.path.join(temp_path, os_info['filename'])
     successful = burn_kano_os(os_path,
                               disk,
                               os_info['uncompressed_size'],

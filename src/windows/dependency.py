@@ -24,7 +24,7 @@ import win32com.shell.shell as shell
 
 from src.common.download import get_latest_os_info
 from src.common.utils import run_cmd_no_pipe, is_internet, debugger, BYTES_IN_MEGABYTE
-from src.common.errors import INTERNET_ERROR, TOOLS_ERROR, FREE_SPACE_ERROR
+from src.common.errors import INTERNET_ERROR, TOOLS_ERROR, SERVER_DOWN_ERROR, FREE_SPACE_ERROR
 from src.common.paths import _7zip_path, _dd_path, _nircmd_path, temp_path
 
 
@@ -61,6 +61,11 @@ def check_dependencies():
 
     # making sure we have enough space to download OS
     required_mb = get_required_mb()
+    if not required_mb:
+        debugger('[ERROR] Could not reach server, they may be down')
+        return SERVER_DOWN_ERROR
+
+    # making sure we have enough space to download OS
     if is_sufficient_space(required_mb):
         debugger('Sufficient available space (min {} MB)'.format(required_mb))
     else:
@@ -105,6 +110,8 @@ def is_installed(programs_list):
 
 def get_required_mb():
     os_info = get_latest_os_info()
+    if not os_info:
+        return None
 
     # on Windows, the burning process first unzips the archive and then burns
     # so we require only the compressed + uncompressed size as free space

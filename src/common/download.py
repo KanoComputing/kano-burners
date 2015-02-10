@@ -120,7 +120,9 @@ def get_latest_os_info():
         # get latest.json from download.kano.me
         response = urllib2.urlopen(LATEST_OS_INFO_URL)
         latest_json = json.load(response)
-        latest_json['filename'] += '.gz'  # the .gz will be used on all OSs
+
+        # the .gz archive will be used on all OSs
+        latest_json['archive'] = latest_json['filename'] + '.gz'
 
         # give the server some time to breathe between requests
         debugger('Latest Kano OS image is {}'.format(latest_json['filename']))
