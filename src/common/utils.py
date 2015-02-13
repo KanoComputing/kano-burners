@@ -96,11 +96,10 @@ def write_file_contents(data, path):
 
 
 def is_internet():
-    url_list = ['http://173.194.34.84',  # google
-                'http://199.16.156.38',  # twitter
-                'http://31.13.80.65',    # facebook
-                'http://173.194.34.78',  # youtube
-                'http://178.236.7.220']  # amazon
+    url_list = ['https://google.com',
+                'https://twitter.com',
+                'https://facebook.com',
+                'https://youtube.com']
     for url in url_list:
         try:
             urlopen(url, timeout=1)
