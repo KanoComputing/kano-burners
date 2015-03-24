@@ -19,6 +19,11 @@
 
 
 from src.common.utils import run_cmd, debugger, BYTES_IN_GIGABYTE
+from src.common.errors import UNMOUNT_ERROR
+
+
+class unmount_error(Exception):
+    pass
 
 
 def get_disks_list():
@@ -115,11 +120,14 @@ def prepare_disk(disk_id, report_ui):
     and format the disk before the burning process starts.
     '''
 
-    report_ui('unmounting disk')
-    unmount_disk(disk_id)
+    try:
+        report_ui('unmounting disk')
+        unmount_disk(disk_id)
 
-    report_ui('formating disk')
-    format_disk(disk_id)
+        report_ui('formating disk')
+        format_disk(disk_id)
+    except unmount_error:
+        return UNMOUNT_ERROR
 
 
 def unmount_disk(disk_id):
@@ -133,6 +141,7 @@ def unmount_disk(disk_id):
         debugger('disk {} successfully unmounted'.format(disk_id))
     else:
         debugger('[ERROR] ' + error.strip('\n'))
+        raise unmount_error
 
 
 def unmount_volumes(disk_id):
