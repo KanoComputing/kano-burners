@@ -43,3 +43,7 @@ BURN_ERROR = {
     'title': 'Burning Kano OS failed..',
     'description': 'Make sure the SD card is still correctly inserted and try again'
 }
+UNMOUNT_ERROR = {
+    'title': 'There was an error unmounting the disk..',
+    'description': 'Make sure the you selected the right disk, and try again'
+}

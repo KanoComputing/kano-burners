@@ -260,7 +260,10 @@ class BurnerBackendThread(QtCore.QThread):
         # this process differs slightly depending on the platform running it
         debugger('Preparing {} for burning..'.format(self.selected_disk))
         self.showStage('Preparing disk for burning..')
-        prepare_disk(self.selected_disk, self.showDescription)
+        error = prepare_disk(self.selected_disk, self.showDescription)
+        if error:
+            self.showFinish(error)
+            return
 
         # Step 3: burn the OS image onto the selected disk
         debugger('Burning image to SD card on ' + self.selected_disk)
