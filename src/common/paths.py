@@ -15,22 +15,26 @@
 
 import os
 import sys
-from src.common.utils import debugger
 
 
-# the current working directory differs when a
-# we are running from a PyInstaller bundle
+# the current working directory differs when we are running from a PyInstaller bundle
 if getattr(sys, 'frozen', False):
-    debugger('Running from PyInstaller bundle')
+    # running from PyInstaller bundle
     base_path = os.path.abspath(sys._MEIPASS)
 else:
-    debugger('Running from source')
+    # running from source
     base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 
+
+# setting a Temp directory path
+temp_path = os.path.join(base_path, 'temp')
+if not os.path.exists(temp_path):
+        os.makedirs(temp_path)
 
 # setting Resources paths - css and images
 res_path = os.path.join(base_path, 'res')
 images_path = os.path.join(res_path, 'images')
+anim_path = os.path.join(res_path, 'animations')
 css_path = os.path.join(res_path, 'CSS')
 
 # setting Windows Tools paths

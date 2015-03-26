@@ -46,7 +46,13 @@ QLabel#footer:hover {
     color: white;
 }
 
+/* Styling specifically for QLables with objectName='dialogTitle' when mouse is over them */
 QLabel#dialogTitle {
     font-size: 25px;
     color: #111111;
+}
+
+/* Styling specifically for QLables with objectName='animation' */
+QLabel#animation {
+    min-width: 500px
 }

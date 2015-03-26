@@ -20,6 +20,7 @@
 # We will also notify the UI of any errors that might have occured.
 
 
+import os
 import time
 import Queue
 import threading
@@ -27,9 +28,10 @@ import subprocess
 
 from src.common.utils import run_cmd, calculate_eta, debugger, BYTES_IN_MEGABYTE
 from src.common.errors import BURN_ERROR
+from src.common.paths import temp_path
 
 
-def start_burn_process(path, os_info, disk, report_progress_ui):
+def start_burn_process(os_info, disk, report_progress_ui):
     '''
     This method is used by the backendThread to burn Kano OS.
 
@@ -46,8 +48,10 @@ def start_burn_process(path, os_info, disk, report_progress_ui):
 
     # start the burning process on a separate thread and such that this one polls for progress
     burn_thread = threading.Thread(target=burn_kano_os,
-                                   args=(path + os_info['filename'], disk,
-                                         os_info['uncompressed_size'], thread_output,
+                                   args=(os.path.join(temp_path, os_info['filename']),
+                                         disk,
+                                         os_info['uncompressed_size'],
+                                         thread_output,
                                          report_progress_ui))
     burn_thread.start()
 
