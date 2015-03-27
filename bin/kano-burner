@@ -278,7 +278,10 @@ class BurnerBackendThread(QtCore.QThread):
         debugger('Ejecting disk..')
         self.showStage('Waiting for things to settle..')
         time.sleep(5)  # wait for dd to mount the disk back
-        eject_disk(self.selected_disk)
+        error = eject_disk(self.selected_disk)
+        if error:
+            self.showfinish(error)
+            return
 
         # Finally, show success messsage, notify UI of finish, and return an empty error
         self.showStage("Kano OS has successfully been burned. Let's go!")

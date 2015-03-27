@@ -47,3 +47,11 @@ UNMOUNT_ERROR = {
     'title': 'There was an error unmounting the disk..',
     'description': 'Make sure the you selected the right disk, and try again'
 }
+FORMAT_ERROR = {
+    'title': 'There was an error formatting the disk..',
+    'description': 'Maybe it is write protected?'
+}
+EJECT_ERROR = {
+    'title': 'There was an error ejecting the disk..',
+    'description': 'Please eject it manually.'
+}
