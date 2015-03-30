@@ -29,6 +29,8 @@ from src.common.paths import _7zip_path, _dd_path, temp_path
 # used to calculate burning speed
 last_written_mb = 0
 
+final_message = ""
+
 
 def start_burn_process(os_info, disk, report_progress_ui):
     '''

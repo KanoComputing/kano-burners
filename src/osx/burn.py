@@ -30,6 +30,7 @@ from src.common.utils import run_cmd, calculate_eta, debugger, BYTES_IN_MEGABYTE
 from src.common.errors import BURN_ERROR
 from src.common.paths import temp_path
 
+final_message = "PLEASE EJECT THE SD CARD!"
 
 def start_burn_process(os_info, disk, report_progress_ui):
     '''
