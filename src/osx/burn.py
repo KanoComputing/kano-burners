@@ -126,12 +126,12 @@ def burn_kano_os(path, disk, size, return_queue, report_progress_ui):
         dd_process.poll()
         if dd_process.returncode is None:
             dd_process.kill()
-            dd_process.poll()
+            dd_process.wait()
 
         gzip_process.poll()
         if gzip_process.returncode is None:
             gzip_process.kill()
-            gzip_process.poll()
+            gzip_process.wait()
 
         if dd_process.returncode != 0:
             debugger('[ERROR] dd returned error code {}'
@@ -139,8 +139,8 @@ def burn_kano_os(path, disk, size, return_queue, report_progress_ui):
             failed = True
 
         if gzip_process.returncode != 0:
-            debugger('[ERROR] dd returned error code {}'
-                     .format(dd_process.returncode))
+            debugger('[ERROR] gzip returned error code {}'
+                     .format(gzip_process.returncode))
             failed = True
 
         gzip_thread.join(100)
