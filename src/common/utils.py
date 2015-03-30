@@ -31,8 +31,10 @@ BYTES_IN_GIGABYTE = 1000000000
 
 
 # The URL used to download information about the lastest OS release
+#LATEST_OS_INFO_URL = 'http://dev.kano.me/temp/burner_test.json' 
 LATEST_OS_INFO_URL = 'http://downloads.kano.me/public/latest.json'
 
+#debf = open("/tmp/kano_burner_{}.log".format(os.getpid()),"w")
 
 def debugger(text):
     # if we are running from a PyInstaller bundle, print debug to file
