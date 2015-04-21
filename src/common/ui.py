@@ -137,6 +137,7 @@ class UI(QtGui.QWidget):
         container = self.createContainer(x, y)
 
         self.finishLabel = container.addLabel("Kano OS has successfully been burned. Let's go!", LABEL_CSS_TITLE)
+        self.finishDescriptionLabel = container.addLabel('description', LABEL_CSS_DESCRIPTION)
         self.FinishButton = container.addButton("FINISH", self.onFinishClick)
         return container
 
@@ -168,6 +169,13 @@ class UI(QtGui.QWidget):
         self.errorTitleLabel.setText(error['title'])
         self.errorDescriptionLabel.setText(error['description'])
         self.showScreen(self.errorScreen)
+
+    def showFinishScreen(self, message=None):
+        if 'title' in message:
+            self.finishLabel.setText(message['title'])
+        if 'description' in message:
+            self.finishDescriptionLabel.setText(message['description'])
+        self.showScreen(self.finishScreen)
 
     def setProgress(self, progress):
         self.progressBar.setValue(progress)

@@ -19,6 +19,11 @@
 
 
 from src.common.utils import run_cmd, debugger, BYTES_IN_GIGABYTE
+from src.common.errors import UNMOUNT_ERROR, FORMAT_ERROR, EJECT_ERROR
+
+
+class disk_error(Exception):
+    pass
 
 
 def get_disks_list():
@@ -100,15 +105,18 @@ def prepare_disk(disk_id, report_ui):
     and format the disk before the burning process starts.
     '''
 
-    report_ui('unmounting disk')
-    unmount_disk(disk_id)
+    try:
+        report_ui('unmounting disk')
+        unmount_disk(disk_id)
 
-    report_ui('formating disk')
-    format_disk(disk_id)
+        report_ui('formating disk')
+        format_disk(disk_id)
 
-    # OSX mounts the disk back after formatting
-    report_ui('unmounting disk')
-    unmount_disk(disk_id)
+        # OSX mounts the disk back after formatting
+        report_ui('unmounting disk')
+        unmount_disk(disk_id)
+    except disk_error as e:
+        return e.args[0]
 
 
 def unmount_disk(disk_id):
@@ -118,7 +126,8 @@ def unmount_disk(disk_id):
     if not return_code:
         debugger('{} successfully unmounted'.format(disk_id))
     else:
-        debugger('[ERROR] ' + error.strip('\n'))
+        debugger('[ERROR: {}] {}'.format(cmd,  error.strip('\n')))
+        raise disk_error(UNMOUNT_ERROR)
 
 
 def format_disk(disk_id):
@@ -128,7 +137,8 @@ def format_disk(disk_id):
     if not return_code:
         debugger('{} successfully erased and formatted'.format(disk_id))
     else:
-        debugger('[ERROR] ' + error.strip('\n'))
+        debugger('[ERROR: {}] {}'.format(cmd, error.strip('\n')))
+        raise disk_error(FORMAT_ERROR)
 
 
 def eject_disk(disk_id):
@@ -142,5 +152,7 @@ def eject_disk(disk_id):
 
     if not return_code:
         debugger('{} successfully ejected'.format(disk_id))
+        return None
     else:
-        debugger('[ERROR] ' + error.strip('\n'))
+        debugger('[ERROR: {}] {}'.format(cmd, error.strip('\n')))
+        return EJECT_ERROR

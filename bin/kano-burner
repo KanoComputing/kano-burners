@@ -48,19 +48,19 @@ from src.common.paths import temp_path
 # Detect OS platform and import appropriate modules
 if platform.system() == 'Darwin':
     debugger('Mac OS detected')
-    from src.osx.burn import start_burn_process
+    from src.osx.burn import start_burn_process, final_message
     from src.osx.disk import get_disks_list, prepare_disk, eject_disk
     from src.osx.dependency import check_dependencies, request_admin_privileges
 
 elif platform.system() == 'Linux':
     debugger('Linux OS detected')
-    from src.linux.burn import start_burn_process
+    from src.linux.burn import start_burn_process, final_message
     from src.linux.disk import get_disks_list, prepare_disk, eject_disk
     from src.linux.dependency import check_dependencies, request_admin_privileges
 
 elif platform.system() == 'Windows':
     debugger('Windows OS detected')
-    from src.windows.burn import start_burn_process
+    from src.windows.burn import start_burn_process, final_message
     from src.windows.disk import get_disks_list, prepare_disk, eject_disk
     from src.windows.dependency import check_dependencies, request_admin_privileges
 
@@ -146,11 +146,12 @@ class BurnerGUI(UI):
         time.sleep(1)  # very odd fix - Qt thread is killed without it
 
     # This method is called when the backendThread finishes
-    def onBackendFinish(self, error):
-        if error:
-            self.showError(error)
+    def onBackendFinish(self, message):
+        if 'success' in message:
+            self.showFinishScreen(message)
         else:
-            self.showScreen(self.finishScreen)
+            self.showError(message)
+
 
     # @Override
     # This method is called when the TRY AGAIN button is clicked
@@ -197,7 +198,7 @@ class BurnerDependencyThread(QtCore.QThread):
         if error:
             self.showFinish(error)
         else:
-            self.notifyFinish.emit(dict())
+            self.showFinish(dict({}))
 
 
 class BurnerBackendThread(QtCore.QThread):
@@ -211,7 +212,7 @@ class BurnerBackendThread(QtCore.QThread):
     in turn is then responsible for displaying the data e.g. burn speed.
 
     From a top level, the back-end does four things: downloads the OS,
-    prepares the disk for burning, burns the OS, and finally ejects
+    prepares the disk for burning, burns the OS. The user must then eject
     the disk for safe removal. These processes will use the signals to
     report progress to the UI and an erroneous or successful completion.
     '''
@@ -239,9 +240,9 @@ class BurnerBackendThread(QtCore.QThread):
         self.notifyProgress.emit(progress)
         self.notifyDescription.emit(text)
 
-    def showFinish(self, error):
+    def showFinish(self, message):
         # this signal notifies whether we finishes sucessfully or with an error
-        self.notifyFinish.emit(error)
+        self.notifyFinish.emit(message)
 
     def run(self):
         # Step 1: download the latest Kano OS image
@@ -260,7 +261,10 @@ class BurnerBackendThread(QtCore.QThread):
         # this process differs slightly depending on the platform running it
         debugger('Preparing {} for burning..'.format(self.selected_disk))
         self.showStage('Preparing disk for burning..')
-        prepare_disk(self.selected_disk, self.showDescription)
+        error = prepare_disk(self.selected_disk, self.showDescription)
+        if error:
+            self.showFinish(error)
+            return
 
         # Step 3: burn the OS image onto the selected disk
         debugger('Burning image to SD card on ' + self.selected_disk)
@@ -270,16 +274,9 @@ class BurnerBackendThread(QtCore.QThread):
             self.showFinish(error)
             return
 
-        # Step 4: eject selected disk so the user can unplug safely
-        # on OSX, the disk will automatically be mounted back after dd finishes
-        debugger('Ejecting disk..')
-        self.showStage('Waiting for things to settle..')
-        time.sleep(5)  # wait for dd to mount the disk back
-        eject_disk(self.selected_disk)
-
         # Finally, show success messsage, notify UI of finish, and return an empty error
         self.showStage("Kano OS has successfully been burned. Let's go!")
-        self.notifyFinish.emit(dict())
+        self.showFinish({'success': True, 'title': final_message, 'description': "Kano OS has successfully been burned. Let's go!"})
 
 
 def main():

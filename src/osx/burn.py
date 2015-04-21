@@ -30,6 +30,7 @@ from src.common.utils import run_cmd, calculate_eta, debugger, BYTES_IN_MEGABYTE
 from src.common.errors import BURN_ERROR
 from src.common.paths import temp_path
 
+final_message = "PLEASE EJECT THE SD CARD!"
 
 def start_burn_process(os_info, disk, report_progress_ui):
     '''
@@ -69,40 +70,91 @@ def start_burn_process(os_info, disk, report_progress_ui):
 
 
 def burn_kano_os(path, disk, size, return_queue, report_progress_ui):
-    cmd = 'gzip -dc {} | dd of={} bs=4m'.format(path, disk)
-    process = subprocess.Popen(cmd, shell=True, stderr=subprocess.PIPE)
-
     failed = False
     unparsed_line = ''
+    try:
+        gzip_cmd = 'gzip -dc {}'.format(path)
+        dd_cmd = 'dd of={} bs=4m'.format(disk)
+        gzip_process = subprocess.Popen(gzip_cmd,
+                                        stderr=subprocess.PIPE,
+                                        stdout=subprocess.PIPE,
+                                        shell=True)
+        dd_process = subprocess.Popen(dd_cmd, stderr=subprocess.PIPE,
+                                      stdin=gzip_process.stdout,
+                                      stdout=subprocess.PIPE,
+                                      shell=True)
+        gzip_process.stdout.close()
 
-    # as long as Popen is running, read it's stderr line by line
-    # each time an INFO signal is sent to dd, it outputs 3 lines
-    # and we are only interested in the last one i.e. 'x bytes written in y seconds'
-    for line in iter(process.stderr.readline, ''):
-        if 'bytes' in line:
-            try:
-                parts = line.split()
+        gzip_err_output = Queue.Queue()
 
-                written_bytes = float(parts[0])
-                progress = int(written_bytes / size * 100)
+        def gzip_read(gzip_file, return_queue):
+            lines = gzip_file.readlines()
+            return_queue.put(lines)
 
-                speed = float(parts[6][1:]) / BYTES_IN_MEGABYTE
+        gzip_thread = threading.Thread(target=gzip_read,
+                                       args=(gzip_process.stderr, gzip_err_output))
+        gzip_thread.start()
 
-                eta = calculate_eta(written_bytes, size, int(parts[6][1:]))
 
-                report_progress_ui(progress, 'speed {0:.2f} MB/s  eta {1:s}  completed {2:d}%'
-                                   .format(speed, eta, progress))
-            except:
-                unparsed_line = line
+        # as long as Popen is running, read it's stderr line by line
+        # each time an INFO signal is sent to dd, it outputs 3 lines
+        # and we are only interested in the last one i.e. 'x bytes written in y seconds'
+        for line in iter(dd_process.stderr.readline, ''):
+            if 'bytes' in line:
+                try:
+                    parts = line.split()
 
-        # watch out for an error output from dd
-        if 'error' in line.lower() or 'invalid' in line.lower():
-            debugger('[ERROR] ' + line)
+                    written_bytes = float(parts[0])
+                    progress = int(written_bytes / size * 100)
+
+                    speed = float(parts[6][1:]) / BYTES_IN_MEGABYTE
+
+                    eta = calculate_eta(written_bytes, size, int(parts[6][1:]))
+
+                    report_progress_ui(progress, 'speed {0:.2f} MB/s  eta {1:s}  completed {2:d}%'
+                                       .format(speed, eta, progress))
+                except:
+                    unparsed_line = line
+
+            # watch out for an error output from dd
+            if 'error' in line.lower() or 'invalid' in line.lower():
+                debugger('[ERROR] ' + line)
+                failed = True
+
+        # dd has closed its stdout, so everything should have finished.
+        # But check anyway.
+
+        dd_process.poll()
+        if dd_process.returncode is None:
+            dd_process.kill()
+            dd_process.wait()
+
+        gzip_process.poll()
+        if gzip_process.returncode is None:
+            gzip_process.kill()
+            gzip_process.wait()
+
+        if dd_process.returncode != 0:
+            debugger('[ERROR] dd returned error code {}'
+                     .format(dd_process.returncode))
             failed = True
 
-    # make sure the progress bar is filled and show an appropriate message
-    # if we failed, the UI will immediately show the error screen
-    report_progress_ui(100, 'burning finished successfully')
+        if gzip_process.returncode != 0:
+            debugger('[ERROR] gzip returned error code {}'
+                     .format(gzip_process.returncode))
+            failed = True
+
+        gzip_thread.join(100)
+        gzip_stderr = gzip_err_output.get()
+
+        debugger("gzip output: " + str(gzip_stderr))
+
+        # make sure the progress bar is filled and show an appropriate message
+        # if we failed, the UI will immediately show the error screen
+        report_progress_ui(100, 'burning finished successfully')
+    except Exception as e:
+        debugger(str(e))
+        failed = True
 
     # making sure we log anything nasty that has happened
     if unparsed_line:
