@@ -59,7 +59,7 @@ class UI(QtGui.QWidget):
     def initUI(self):
         # initialise the UI - set title, size, center, set theme, app frames etc
         # and finally display it
-        self.setWindowTitle('Kano OS Burner')
+        self.setWindowTitle('Kano OS Burner v2')
         self.resize(APP_WIDTH, APP_HEIGHT)
         self.center()
         self.setTheme()
