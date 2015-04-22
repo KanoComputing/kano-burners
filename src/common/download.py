@@ -151,6 +151,6 @@ def get_latest_os_info():
 
 def get_required_mb():
     os_info = get_latest_os_info()
-    required_bytes = os_info['compressed_size'] + os_info['uncompressed_size']
+    required_bytes = os_info['compressed_size'] + os_info['uncompressed_size'] + BYTES_IN_MEGABYTE * 50
 
     return required_bytes / BYTES_IN_MEGABYTE
