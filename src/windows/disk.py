@@ -48,7 +48,7 @@ def get_disks_list():
 
     disks = list()
 
-    cmd = "wmic diskdrive get deviceid, model, size /format:list"
+    cmd = "wmic diskdrive get deviceid, mediatype, model, size /format:list"
     output, error, return_code = run_cmd_no_pipe(cmd)
 
     if return_code:
@@ -66,15 +66,18 @@ def get_disks_list():
             id_num = output_lines[index][drive_loc:]
             disk_id = "\\\\?\\Device\\Harddisk{}\\Partition0".format(id_num)
 
+            # media type
+            media_type = output_lines[index +1].split('=')[1]
+
             # for the disk model, remove the last word which is always 'device'
-            model = output_lines[index + 1].split('=')[1]
+            model = output_lines[index + 2].split('=')[1]
             disk_name = ' '.join(model.split()[:-1])
 
             # the size may not be listed (i.e. ''), in which case we assume
             # the device is not plugged in e.g. an empty USB SD card reader
             disk_size = -1
             try:
-                size_bytes = float(output_lines[index + 2].split('=')[1])
+                size_bytes = float(output_lines[index + 3].split('=')[1])
                 disk_size = size_bytes / BYTES_IN_GIGABYTE
             except:
                 pass
@@ -87,7 +90,10 @@ def get_disks_list():
             }
 
             # make sure we do not list any potential hard drive or too small SD card
-            if disk['size'] < 3.5 or disk['size'] > 9 or disk['size'] == -1:
+            if (disk['size'] < 3.5 or
+                disk['size'] > 9 or
+                disk['size'] == -1 or
+                media_type.startswith('Fixed')):
                 debugger('Ignoring {}'.format(disk))
             else:
                 debugger('Listing {}'.format(disk))
