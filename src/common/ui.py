@@ -19,7 +19,7 @@
 import os
 from PyQt4 import QtGui
 from src.common.widgets import VerticalContainer
-from src.common.utils import load_css_for_widget
+from src.common.utils import load_css_for_widget, BURNER_VERSION
 from src.common.paths import images_path, anim_path, css_path
 
 
@@ -59,7 +59,7 @@ class UI(QtGui.QWidget):
     def initUI(self):
         # initialise the UI - set title, size, center, set theme, app frames etc
         # and finally display it
-        self.setWindowTitle('Kano OS Burner v2')
+        self.setWindowTitle('Kano OS Burner v{}'.format(BURNER_VERSION))
         self.resize(APP_WIDTH, APP_HEIGHT)
         self.center()
         self.setTheme()

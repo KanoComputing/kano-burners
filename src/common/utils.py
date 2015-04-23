@@ -29,6 +29,7 @@ from src.common.paths import temp_path
 BYTES_IN_MEGABYTE = 1000000
 BYTES_IN_GIGABYTE = 1000000000
 
+BURNER_VERSION = 2
 
 # The URL used to download information about the lastest OS release
 #LATEST_OS_INFO_URL = 'http://dev.kano.me/temp/burner_test.json' 

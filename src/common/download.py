@@ -25,7 +25,8 @@ import traceback
 
 from src.common.pySmartDL.pySmartDL import SmartDL, HashFailedException
 from src.common.utils import debugger, LATEST_OS_INFO_URL, BYTES_IN_MEGABYTE
-from src.common.errors import DOWNLOAD_ERROR, MD5_ERROR
+from src.common.utils import BURNER_VERSION
+from src.common.errors import DOWNLOAD_ERROR, MD5_ERROR, OLDBURNER_ERROR
 from src.common.paths import temp_path
 
 
@@ -67,6 +68,11 @@ def download_kano_os(report_progress_ui):
     os_info = get_latest_os_info()
     if not os_info:
         return None, DOWNLOAD_ERROR
+
+    # Don't continue if this version of the burner is out of date
+    if 'min_burner_version' in os_info:
+        if os_info['min_burner_version'] > BURNER_VERSION:
+            return None, OLDBURNER_ERROR
 
     # the documentation is misleading - if non blocking mode is used,
     # pySmartDL may still throw exceptions
