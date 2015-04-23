@@ -91,7 +91,7 @@ def get_disks_list():
 
             # make sure we do not list any potential hard drive or too small SD card
             if (disk['size'] < 3.5 or
-                disk['size'] > 9 or
+                disk['size'] > 16.5 or
                 disk['size'] == -1 or
                 media_type.startswith('Fixed')):
                 debugger('Ignoring {}'.format(disk))
