@@ -267,7 +267,7 @@ class BurnerBackendThread(QtCore.QThread):
             return
 
         # Step 3: burn the OS image onto the selected disk
-        debugger('Burning image to SD card on ' + self.selected_disk)
+        debugger('Burning image to SD card on ' + str(self.selected_disk))
         self.showStage('Burning Kano OS..')
         error = start_burn_process(os_info, self.selected_disk, self.showProgress)
         if error:

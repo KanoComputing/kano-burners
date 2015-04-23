@@ -24,7 +24,10 @@ import time
 
 from src.common.utils import run_cmd_no_pipe, write_file_contents, debugger, BYTES_IN_GIGABYTE
 from src.common.paths import _nircmd_path, temp_path
+from src.common.errors import FORMAT_ERROR
 
+class disk_error(Exception):
+    pass
 
 def get_disks_list():
     '''
@@ -110,11 +113,15 @@ def prepare_disk(disk_id, report_ui):
     for writing with dd and getting passed denial of access.
     '''
 
-    report_ui('closing all Explorer windows')
-    close_all_explorer_windows()
+    try:
+        report_ui('closing all Explorer windows')
+        close_all_explorer_windows()
 
-    report_ui('formatting the disk')
-    format_disk(disk_id)
+        report_ui('formatting the disk')
+        format_disk(disk_id)
+
+    except disk_error as e:
+        return e.args[0]
 
     # hopefully, the disk should be 'enabled' at this point and
     # dd should have no trouble to write the OS to Partition0
@@ -151,6 +158,7 @@ def format_disk(disk_id):
         debugger('Formatted disk {} with diskpart'.format(id))
     else:
         debugger('[ERROR] ' + error.strip('\n'))
+        raise disk_error(FORMAT_ERROR)
 
 
 def eject_disk(disk_id):
