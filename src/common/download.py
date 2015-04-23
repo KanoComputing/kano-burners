@@ -24,6 +24,7 @@ import urllib2
 import traceback
 
 from src.common.pySmartDL.pySmartDL import SmartDL, HashFailedException
+from src.common.aria2_downloader import Downloader as AriaDownloader
 from src.common.utils import debugger, LATEST_OS_INFO_URL, BYTES_IN_MEGABYTE
 from src.common.utils import BURNER_VERSION
 from src.common.errors import DOWNLOAD_ERROR, MD5_ERROR, OLDBURNER_ERROR
@@ -52,7 +53,7 @@ class Downloader(SmartDL):
         return not self._killed and SmartDL.isFinished(self)
 
 
-def download_kano_os(report_progress_ui):
+def download_kano_os(report_progress_ui, get_downloader):
     '''
     This method is used by the backendThread to download Kano OS.
 
@@ -77,7 +78,7 @@ def download_kano_os(report_progress_ui):
     # the documentation is misleading - if non blocking mode is used,
     # pySmartDL may still throw exceptions
     try:
-        downloader = Downloader(os_info['url'], dest=temp_path, progress_bar=False)
+        downloader = get_downloader(os_info['url'], dest=temp_path, progress_bar=False)
         # simply make sure the file was not corrupted - not for cryptographic security
         downloader.add_hash_verification('md5', os_info['compressed_md5'])
         downloader.start(blocking=False)
@@ -108,6 +109,7 @@ def download_kano_os(report_progress_ui):
 
     else:
         # look through the errors that occured and report an MD5 error
+        debugger('FAILED, looking for errors')
         for error in downloader.get_errors():
             if isinstance(error, HashFailedException):
                 debugger('[ERROR] MD5 verification failed')

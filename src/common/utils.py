@@ -37,16 +37,22 @@ cmd_env = os.environ.copy().update(LC_ALL='C')
 #LATEST_OS_INFO_URL = 'http://dev.kano.me/temp/burner_test.json' 
 LATEST_OS_INFO_URL = 'http://downloads.kano.me/public/latest.json'
 
-#debf = open("/tmp/kano_burner_{}.log".format(os.getpid()),"w")
+debf = open("/tmp/kano_burner_{}.log".format(os.getpid()),"w")
+
+debout = None
 
 def debugger(text):
+    global debout
     # if we are running from a PyInstaller bundle, print debug to file
     if getattr(sys, 'frozen', False):
         with open(os.path.join(temp_path, 'debug.txt'), "a") as debug_file:
             debug_file.write(text + '\n')
     # otherwise, print debug to stdout
     else:
-        print text
+        if debout is None:
+            debout = open('/dev/tty', 'w')
+        print >>debout, text
+        debout.flush()
 
 
 def run_cmd(cmd):
@@ -56,6 +62,7 @@ def run_cmd(cmd):
 
     stdout, stderr = process.communicate()
     return_code = process.returncode
+    debugger('ran: [{}] {}'.format(cmd, return_code))
     return stdout, stderr, return_code
 
 
