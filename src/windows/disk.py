@@ -64,8 +64,8 @@ def get_disks_list():
             # which for dd is the entire disk, not some partition on the disk
             drive_loc = output_lines[index].lower().find('physicaldrive') + len('physicaldrive')
             id_num = output_lines[index][drive_loc:]
-            disk_id = "\\\\?\\Device\\Harddisk{}\\Partition0".format(id_num)
-
+            id_str = "\\\\?\\Device\\Harddisk{}\\Partition0".format(id_num)
+            disk_id = {'id_num': id_num, 'id_str': id_str}
             # media type
             media_type = output_lines[index +1].split('=')[1]
 
@@ -90,10 +90,10 @@ def get_disks_list():
             }
 
             # make sure we do not list any potential hard drive or too small SD card
-            if (disk['size'] < 3.5 or
-                disk['size'] > 16.5 or
-                disk['size'] == -1 or
-                media_type.startswith('Fixed')):
+            if    (disk['size'] < 3.5 or
+                   disk['size'] > 16.5 or
+                   disk['size'] == -1 or
+                   media_type.startswith('Fixed')):
                 debugger('Ignoring {}'.format(disk))
             else:
                 debugger('Listing {}'.format(disk))
@@ -135,7 +135,7 @@ def format_disk(disk_id):
 
     # extract the id of the physical disk, required by diskpart
     # e.g. \\?\Device\Harddisk[id]\Partition0
-    id = int(disk_id.split("Harddisk")[1][0])  # access by string index alone is dangerous!
+    id = int(disk_id['id_num'])  # access by string index alone is dangerous!
 
     # create a diskpart script to format the given disk
     diskpart_format_script = 'select disk {} \nclean'.format(id)
