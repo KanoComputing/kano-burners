@@ -76,10 +76,13 @@ def burn_kano_os(path, disk, size, return_queue, report_progress_ui):
         gzip_cmd = 'gzip -dc {}'.format(path)
         dd_cmd = 'dd of={} bs=4m'.format(disk)
         gzip_process = subprocess.Popen(gzip_cmd,
+                                        env={'LC_ALL':'C'},
                                         stderr=subprocess.PIPE,
                                         stdout=subprocess.PIPE,
                                         shell=True)
-        dd_process = subprocess.Popen(dd_cmd, stderr=subprocess.PIPE,
+        dd_process = subprocess.Popen(dd_cmd,
+                                      env={'LC_ALL':'C'},
+                                      stderr=subprocess.PIPE,
                                       stdin=gzip_process.stdout,
                                       stdout=subprocess.PIPE,
                                       shell=True)

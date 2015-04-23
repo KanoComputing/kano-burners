@@ -43,21 +43,15 @@ def get_disks_list():
 
     disks = list()
 
-    disk_ids = get_disk_ids()
-    disk_names = get_disk_names()
-    disk_sizes = get_disk_sizes()
+    for disk_id in get_disk_ids():
 
-    # check for parsing errors
-    if len(disk_ids) != len(disk_names) or len(disk_names) != len(disk_sizes):
-        return disks
+        # get the disk manufacturer and size in GB
+        disk_name, disk_size = get_disk_name_size(disk_id)
 
-    for index in range(0, len(disk_ids)):
-
-        # append all data here, this would need changing if logic changes
         disk = {
-            'id': disk_ids[index],
-            'name': disk_names[index],
-            'size': disk_sizes[index]
+            'id': disk_id,
+            'name': disk_name,
+            'size': disk_size
         }
 
         # make sure we do not list any potential hard drive or too small SD card
@@ -84,34 +78,26 @@ def get_disk_ids():
     return disk_ids
 
 
-def get_disk_names():
-    cmd = "parted --list | grep 'Model:'"
+def get_disk_name_size(disk_id):
+    cmd = "parted {} unit B print".format(disk_id)
     output, error, return_code = run_cmd(cmd)
 
-    disk_names = []
-    for name in output.splitlines():
-        disk_names.append(' '.join(name.split()[1:-1]))
+    disk_name = ''
+    disk_size = 0
 
     if return_code:
         debugger('[ERROR] ' + error.strip('\n'))
 
-    # grab the first line of the output and the name is from the 4th word onwards
-    return disk_names
+    for line in output.splitlines():
+        if 'Model:' in line:
+            disk_name = ' '.join(line.split()[1:])
+        if 'Disk {}:'.format(disk_id) in line:
+            disk_size = float(line[:-1].split()[2]) / BYTES_IN_GIGABYTE
 
+    if not disk_name or not disk_size:
+        debugger('[ERROR] Parsing disk name and size failed')
 
-def get_disk_sizes():
-    cmd = "fdisk -l | grep 'Disk /dev/'"
-    output, error, return_code = run_cmd(cmd)
-
-    disk_sizes = []
-    for line in sorted(output.splitlines()):
-        size = line.split()[4]
-        disk_sizes.append(float(size) / BYTES_IN_GIGABYTE)
-
-    if return_code:
-        debugger('[ERROR] ' + error.strip('\n'))
-
-    return disk_sizes
+    return disk_name, disk_size
 
 
 def prepare_disk(disk_id, report_ui):
