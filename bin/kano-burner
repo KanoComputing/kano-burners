@@ -51,7 +51,8 @@ if platform.system() == 'Darwin':
     from src.osx.burn import start_burn_process, final_message
     from src.osx.disk import get_disks_list, prepare_disk, eject_disk
     from src.osx.dependency import check_dependencies, request_admin_privileges
-    from src.common.download import Downloader
+    from src.common.aria2_downloader import Downloader
+    #from src.common.download import Downloader
     from src.common.paths import _aria2_osx_path
     from src.common.aria2_downloader import set_aria2_path
     set_aria2_path(_aria2_osx_path)
@@ -68,7 +69,7 @@ elif platform.system() == 'Windows':
     from src.windows.burn import start_burn_process, final_message
     from src.windows.disk import get_disks_list, prepare_disk, eject_disk
     from src.windows.dependency import check_dependencies, request_admin_privileges
-    from src.common.aria2_downloader import AriaDownloader as Downloader
+    from src.common.aria2_downloader import Downloader
     from src.common.paths import _aria2_win_path
     from src.common.aria2_downloader import set_aria2_path
     set_aria2_path(_aria2_win_path)

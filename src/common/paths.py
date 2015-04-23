@@ -44,5 +44,6 @@ _dd_path = os.path.join(win_tools_path, 'dd')
 _nircmd_path = os.path.join(win_tools_path, 'nircmd')
 _aria2_win_path = os.path.join(win_tools_path, 'aria2', 'aria2c.exe')
 
+# setting OSx Tools paths
 osx_tools_path = os.path.join(base_path, 'osx')
-_aria2_osx_path = os.path.join(win_tools_path, 'aria2', 'aria2c')
+_aria2_osx_path = os.path.join(osx_tools_path, 'aria2', 'aria2c')

@@ -125,7 +125,8 @@ for index in range(0, len(spec_lines)):
     # modify the path to the project - because we generated the file in build/[platform]
     if 'pathex' in spec_lines[index]:
         # go up two levels to fix the path
-        correct_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        correct_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        print correct_path
         line_parts = spec_lines[index].split("'")
         line_parts[1] = correct_path
         spec_lines[index] = "'".join(line_parts)
