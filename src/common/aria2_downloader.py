@@ -66,8 +66,8 @@ class Downloader:
         cmd_args = l1 + checksum_opts
         cmd = ' '.join(cmd_args)
         self.process = subprocess.Popen(cmd, shell=True, universal_newlines=True,
-                               stdout=sys.stdout,
-                                        stderr=subprocess.STDOUT)
+                                        stdout=None,
+                                        stderr=None)
         atexit.register(self.close)
         
         debugger('ran [{}] pid {}'.format(cmd, self.process.pid))
