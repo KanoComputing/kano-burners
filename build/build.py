@@ -65,6 +65,7 @@ def compile_resources():
 
     resources += extra_datas(os.path.join(os.getcwd(), '..', '..', 'res'))
     resources += extra_datas(os.path.join(os.getcwd(), '..', '..', 'win'))
+    resources += extra_datas(os.path.join(os.getcwd(), '..', '..', 'osx'))
     resources += extra_datas(os.path.join(os.getcwd(), '..', '..', 'DISCLAIMER'))
 
     return resources
