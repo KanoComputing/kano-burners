@@ -31,6 +31,8 @@ BYTES_IN_GIGABYTE = 1000000000
 
 BURNER_VERSION = 2
 
+cmd_env = os.environ.copy().update(LC_ALL='C')
+
 # The URL used to download information about the lastest OS release
 #LATEST_OS_INFO_URL = 'http://dev.kano.me/temp/burner_test.json' 
 LATEST_OS_INFO_URL = 'http://downloads.kano.me/public/latest.json'
@@ -48,7 +50,7 @@ def debugger(text):
 
 
 def run_cmd(cmd):
-    process = subprocess.Popen(cmd, shell=True, env={'LC_ALL':'C'},
+    process = subprocess.Popen(cmd, shell=True, env=cmd_env,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                preexec_fn=restore_signals)
 

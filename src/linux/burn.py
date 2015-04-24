@@ -26,7 +26,8 @@ import Queue
 import threading
 import subprocess
 
-from src.common.utils import run_cmd, calculate_eta, debugger, BYTES_IN_MEGABYTE
+from src.common.utils import run_cmd, calculate_eta, debugger
+from src.common.utils import BYTES_IN_MEGABYTE, cmd_env
 from src.common.errors import BURN_ERROR
 from src.common.paths import temp_path
 
@@ -72,7 +73,7 @@ def start_burn_process(os_info, disk, report_progress_ui):
 
 def burn_kano_os(path, disk, size, return_queue, report_progress_ui):
     cmd = 'gzip -dc {} | dd of={} bs=4M'.format(path, disk)
-    process = subprocess.Popen(cmd, shell=True, env={'LC_ALL':'C'}, stderr=subprocess.PIPE)
+    process = subprocess.Popen(cmd, shell=True, env=cmd_env, stderr=subprocess.PIPE)
 
     failed = False
     unparsed_line = ''

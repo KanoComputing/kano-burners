@@ -26,7 +26,8 @@ import Queue
 import threading
 import subprocess
 
-from src.common.utils import run_cmd, calculate_eta, debugger, BYTES_IN_MEGABYTE
+from src.common.utils import run_cmd, calculate_eta, debugger
+from src.common.utils import BYTES_IN_MEGABYTE, cmd_env
 from src.common.errors import BURN_ERROR
 from src.common.paths import temp_path
 
@@ -76,12 +77,12 @@ def burn_kano_os(path, disk, size, return_queue, report_progress_ui):
         gzip_cmd = 'gzip -dc {}'.format(path)
         dd_cmd = 'dd of={} bs=4m'.format(disk)
         gzip_process = subprocess.Popen(gzip_cmd,
-                                        env={'LC_ALL':'C'},
+                                        env=cmd_env,
                                         stderr=subprocess.PIPE,
                                         stdout=subprocess.PIPE,
                                         shell=True)
         dd_process = subprocess.Popen(dd_cmd,
-                                      env={'LC_ALL':'C'},
+                                      env=cmd_env,
                                       stderr=subprocess.PIPE,
                                       stdin=gzip_process.stdout,
                                       stdout=subprocess.PIPE,
