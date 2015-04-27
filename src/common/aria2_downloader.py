@@ -9,6 +9,7 @@
 # Downloading Kano OS module
 
 from src.common.utils import debugger
+from src.common.paths import temp_path
 import os.path
 import os
 import subprocess
@@ -16,7 +17,8 @@ import xmlrpclib
 import sys
 import atexit
 import time
-
+import platform
+from src.common.utils import dump_pipe
 
 class HashFailedException(Exception):
     pass
@@ -42,6 +44,15 @@ class Downloader:
 
         self.ariaStatus = {}
         self.gid = None
+        if platform.system()=='Darwin':
+            self.aria_stdout = None
+            self.startupinfo = None
+        else:
+            self.aria_stdout = None
+            self.startupinfo = subprocess.STARTUPINFO()
+            self.startupinfo.dwFlags = subprocess.CREATE_NEW_CONSOLE | subprocess.STARTF_USESHOWWINDOW
+            self.startupinfo.wShowWindow = subprocess.SW_HIDE
+
 
     def add_hash_verification(self, hash_type, hash_value):
         self.hash_type = hash_type
@@ -66,13 +77,16 @@ class Downloader:
             '--rpc-secret={}'.format(self.secret)
             ]
         cmd_args = l1 + checksum_opts
-        cmd = ' '.join(cmd_args)
-        self.process = subprocess.Popen(cmd, shell=True, universal_newlines=True,
-                                        stdout=sys.stdout,
-                                        stderr=subprocess.STDOUT)
+        debugger('running [{}]'.format(cmd_args))
+        self.process = subprocess.Popen(cmd_args, shell=False, universal_newlines=True,
+                                        stdout=self.aria_stdout,
+                                        stderr=self.aria_stdout,
+                                        startupinfo=self.startupinfo)
+        debugger('ran {}'.format(self.process.pid))
         atexit.register(self.close)
+
         
-        debugger('ran [{}] pid {}'.format(cmd, self.process.pid))
+        
         try:
             self.server = xmlrpclib.ServerProxy('http://localhost:{}/rpc'.format(port))
         except Exception as e:

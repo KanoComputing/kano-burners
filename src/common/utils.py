@@ -20,6 +20,8 @@ import signal
 import subprocess
 from urllib2 import urlopen
 from PyQt4 import QtCore
+import platform
+import threading
 
 from src.common.paths import temp_path
 
@@ -40,14 +42,20 @@ if os.environ.has_key('KANO_BURNER_TEST_URL'):
 else:
     LATEST_OS_INFO_URL = 'http://downloads.kano.me/public/latest.json'
 
+debf=None
 def debugger(text):
+    global debf
     # if we are running from a PyInstaller bundle, print debug to file
     if getattr(sys, 'frozen', False):
         with open(os.path.join(temp_path, 'debug.txt'), "a") as debug_file:
             debug_file.write(text + '\n')
     # otherwise, print debug to stdout
     else:
-        print text
+        if debf is None:
+            if platform.system() == 'Darwin':
+                debf = open('/dev/tty','w')
+        print >>debf, text
+        debf.flush()
 
 def run_cmd(cmd):
     process = subprocess.Popen(cmd, shell=True, env=cmd_env,
@@ -171,3 +179,15 @@ def calculate_eta(progress, total, speed):
         return '{} minutes, {} seconds'.format(minutes, seconds)
     else:
         return '{} seconds'.format(seconds)
+
+
+def dump_pipe(filehandle):
+    def dump_read(dump_file):
+        for line in dump_file:
+            pass
+
+    dump_thread = threading.Thread(target=dump_read,
+                                   args=(filehandle))
+    dump_thread.start()
+
+
