@@ -8,11 +8,11 @@
 #
 # Downloading Kano OS module
 #
-# The module uses PySmartDL to download the OS image file and
+# The module uses aria2 or PySmartDL to download the OS image file and
 # urllib2 to get the information about the latest OS release.
 #
 # The downloading process is also required to report it's progress
-# back to the UI, therefore we run PySmartDL as a child process
+# back to the UI, therefore we run  a child process
 # and sit in a polling loop while it is running.
 #
 # We will also notify the UI of any errors that might have occured.
@@ -140,6 +140,11 @@ def get_latest_os_info():
         latest_image_json = '{base_url}{filename}.json'.format(
             base_url=latest_json['base_url'],
             filename=latest_json['filename'])
+
+        # aria2 supports more url types, allow option to use these without failing
+        # backward compatibility with older burners
+        if 'url.v2' in latest_json:
+            latest_json['url'] = latest_json['url.v2']
 
         debugger('Latest Kano OS image json is {}'.format(latest_image_json))
         response = urllib2.urlopen(latest_image_json)
