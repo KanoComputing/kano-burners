@@ -34,8 +34,11 @@ BURNER_VERSION = 2
 cmd_env = os.environ.copy().update(LC_ALL='C')
 
 # The URL used to download information about the lastest OS release
-#LATEST_OS_INFO_URL = 'http://dev.kano.me/temp/burner_test.json' 
-LATEST_OS_INFO_URL = 'http://downloads.kano.me/public/latest.json'
+LATEST_OS_INFO_URL=None
+if os.environ.has_key('KANO_BURNER_TEST_URL'):
+    LATEST_OS_INFO_URL= os.environ['KANO_BURNER_TEST_URL']
+else:
+    LATEST_OS_INFO_URL = 'http://downloads.kano.me/public/latest.json'
 
 debf = open("/tmp/kano_burner_{}.log".format(os.getpid()),"w")
 
