@@ -11,7 +11,7 @@ N=burner_test
 F=${N}.img
 
 
-dd if=/dev/urandom bs=1M count=10 of=$(F)
+dd if=/dev/urandom bs=1M count=10 of=${F}
 
 gzip ${F}
 zcat ${F}.gz >${F}
@@ -32,8 +32,8 @@ cat >${N}.json <<EOF
   "name": "Kano OS",
   "version": "Beta 1.3.4",
   "base_url": "http://dev.kano.me/temp/",
-  "filename": "burner_test.img",
-  "url": "http://dev.kano.me/temp/burner_test.img.gz",
-  "url_zip": "http://dev.kano.me/temp/burner_test.img.zip"
+  "filename": "${F}.img",
+  "url": "http://dev.kano.me/temp/${F}.img.gz",
+  "url_zip": "http://dev.kano.me/temp/${F}.img.zip"
 }
 EOF
