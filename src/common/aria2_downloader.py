@@ -174,12 +174,15 @@ class Downloader:
     def close(self):
         self.process.poll()
         if not self.process.returncode:
-            self.process.kill()
+            self.server.aria2.shutdown('token:'+self.secret)
             time.sleep(1)
             self.process.poll()
             if not self.process.returncode:
-                self.process.terminate()
-                pass
+                self.process.kill()
+                time.sleep(1)
+                self.process.poll()
+                if not self.process.returncode:
+                    self.process.terminate()
 
     def isSuccessful(self):
         if self.failed:
