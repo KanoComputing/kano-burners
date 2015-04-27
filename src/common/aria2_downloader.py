@@ -21,6 +21,7 @@ import time
 class HashFailedException(Exception):
     pass
 
+_aria2_path=None
 def set_aria2_path(path):
     global _aria2_path
     _aria2_path = path
@@ -50,7 +51,8 @@ class Downloader:
         checksum_opts = []
 
         if self.hash_type:
-            checksum_opts = ['-V', '--checksum={}={}'.format(self.hash_type, self.hash_value)]
+            checksum_opts = ['-V']
+            checksum_opt = '{}={}'.format(self.hash_type, self.hash_value)
         port = 5900
         l1 = [
             _aria2_path,
@@ -66,8 +68,8 @@ class Downloader:
         cmd_args = l1 + checksum_opts
         cmd = ' '.join(cmd_args)
         self.process = subprocess.Popen(cmd, shell=True, universal_newlines=True,
-                                        stdout=None,
-                                        stderr=None)
+                                        stdout=sys.stdout,
+                                        stderr=subprocess.STDOUT)
         atexit.register(self.close)
         
         debugger('ran [{}] pid {}'.format(cmd, self.process.pid))
@@ -83,7 +85,7 @@ class Downloader:
                 self.process.poll()
                 debugger('rc {}'.format(self.process.returncode))
                 time.sleep(1)
-                self.gid = self.server.aria2.addUri('token:'+self.secret, [self.url])
+                self.gid = self.server.aria2.addUri('token:'+self.secret, [self.url], {'checksum':checksum_opt})
                 debugger('added download gid:{}'.format(self.gid))
             except Exception as e:
                 debugger('addUri failed {}'.format(e))
@@ -188,10 +190,8 @@ class Downloader:
         # Fixme: check codes present in dict
         # Fixme: check for hash failed code
 
-        if self.ariaStatus['status'] != 'complete':
-            debugger('Download status not completed {}'.format(self.ariaStatus['status']))
-            return False
-        if int(self.ariaStatus['errorCode']) != 0:
+        if self.ariaStatus['status'] != 'complete' or int(self.ariaStatus['errorCode']) != 0:
+            debugger('Download status {}'.format(self.ariaStatus['status']))
             debugger('Downloader returned error code {}'.format(self.ariaStatus['errorCode']))
             return False
 
