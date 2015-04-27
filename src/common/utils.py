@@ -40,23 +40,14 @@ if os.environ.has_key('KANO_BURNER_TEST_URL'):
 else:
     LATEST_OS_INFO_URL = 'http://downloads.kano.me/public/latest.json'
 
-debf = open("/tmp/kano_burner_{}.log".format(os.getpid()),"w")
-
-debout = None
-
 def debugger(text):
-    global debout
     # if we are running from a PyInstaller bundle, print debug to file
     if getattr(sys, 'frozen', False):
         with open(os.path.join(temp_path, 'debug.txt'), "a") as debug_file:
             debug_file.write(text + '\n')
     # otherwise, print debug to stdout
     else:
-        if debout is None:
-            debout = open('/dev/tty', 'w')
-        print >>debout, text
-        debout.flush()
-
+        print text
 
 def run_cmd(cmd):
     process = subprocess.Popen(cmd, shell=True, env=cmd_env,
