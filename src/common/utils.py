@@ -54,6 +54,8 @@ def debugger(text):
         if debf is None:
             if platform.system() == 'Darwin':
                 debf = open('/dev/tty','w')
+            else:
+                debf = sys.stdout
         print >>debf, text
         debf.flush()
 
