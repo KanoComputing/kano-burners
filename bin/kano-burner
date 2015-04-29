@@ -2,7 +2,7 @@
 
 # kano-burner
 #
-# Copyright (C) 2014 Kano Computing Ltd.
+# Copyright (C) 2014,2015 Kano Computing Ltd.
 # License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
 #
 #
@@ -51,18 +51,28 @@ if platform.system() == 'Darwin':
     from src.osx.burn import start_burn_process, final_message
     from src.osx.disk import get_disks_list, prepare_disk, eject_disk
     from src.osx.dependency import check_dependencies, request_admin_privileges
+    from src.common.aria2_downloader import Downloader
+    #from src.common.download import Downloader
+    from src.common.paths import _aria2_osx_path
+    from src.common.aria2_downloader import set_aria2_path
+    set_aria2_path(_aria2_osx_path)
 
 elif platform.system() == 'Linux':
     debugger('Linux OS detected')
     from src.linux.burn import start_burn_process, final_message
     from src.linux.disk import get_disks_list, prepare_disk, eject_disk
     from src.linux.dependency import check_dependencies, request_admin_privileges
+    from src.common.download import Downloader
 
 elif platform.system() == 'Windows':
     debugger('Windows OS detected')
     from src.windows.burn import start_burn_process, final_message
     from src.windows.disk import get_disks_list, prepare_disk, eject_disk
     from src.windows.dependency import check_dependencies, request_admin_privileges
+    from src.common.aria2_downloader import Downloader
+    from src.common.paths import _aria2_win_path
+    from src.common.aria2_downloader import set_aria2_path
+    set_aria2_path(_aria2_win_path)
 
 
 class BurnerGUI(UI):
@@ -250,7 +260,7 @@ class BurnerBackendThread(QtCore.QThread):
         # e.g. file name, md5, size..
         debugger('Downloading Kano OS..')
         self.showStage('Downloading Kano OS..')
-        os_info, error = download_kano_os(self.showProgress)
+        os_info, error = download_kano_os(self.showProgress, Downloader)
         if error:
             self.showFinish(error)
             debugger('Removing temp files')
@@ -267,7 +277,7 @@ class BurnerBackendThread(QtCore.QThread):
             return
 
         # Step 3: burn the OS image onto the selected disk
-        debugger('Burning image to SD card on ' + self.selected_disk)
+        debugger('Burning image to SD card on ' + str(self.selected_disk))
         self.showStage('Burning Kano OS..')
         error = start_burn_process(os_info, self.selected_disk, self.showProgress)
         if error:

@@ -2,7 +2,7 @@
 
 # disk.py
 #
-# Copyright (C) 2014 Kano Computing Ltd.
+# Copyright (C) 2014,2015 Kano Computing Ltd.
 # License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
 #
 #
@@ -24,7 +24,10 @@ import time
 
 from src.common.utils import run_cmd_no_pipe, write_file_contents, debugger, BYTES_IN_GIGABYTE
 from src.common.paths import _nircmd_path, temp_path
+from src.common.errors import FORMAT_ERROR
 
+class disk_error(Exception):
+    pass
 
 def get_disks_list():
     '''
@@ -48,7 +51,7 @@ def get_disks_list():
 
     disks = list()
 
-    cmd = "wmic diskdrive get deviceid, model, size /format:list"
+    cmd = "wmic diskdrive get deviceid, mediatype, model, size /format:list"
     output, error, return_code = run_cmd_no_pipe(cmd)
 
     if return_code:
@@ -64,17 +67,20 @@ def get_disks_list():
             # which for dd is the entire disk, not some partition on the disk
             drive_loc = output_lines[index].lower().find('physicaldrive') + len('physicaldrive')
             id_num = output_lines[index][drive_loc:]
-            disk_id = "\\\\?\\Device\\Harddisk{}\\Partition0".format(id_num)
+            id_str = "\\\\?\\Device\\Harddisk{}\\Partition0".format(id_num)
+            disk_id = {'id_num': id_num, 'id_str': id_str}
+            # media type
+            media_type = output_lines[index +1].split('=')[1]
 
             # for the disk model, remove the last word which is always 'device'
-            model = output_lines[index + 1].split('=')[1]
+            model = output_lines[index + 2].split('=')[1]
             disk_name = ' '.join(model.split()[:-1])
 
             # the size may not be listed (i.e. ''), in which case we assume
             # the device is not plugged in e.g. an empty USB SD card reader
             disk_size = -1
             try:
-                size_bytes = float(output_lines[index + 2].split('=')[1])
+                size_bytes = float(output_lines[index + 3].split('=')[1])
                 disk_size = size_bytes / BYTES_IN_GIGABYTE
             except:
                 pass
@@ -87,7 +93,10 @@ def get_disks_list():
             }
 
             # make sure we do not list any potential hard drive or too small SD card
-            if disk['size'] < 3.5 or disk['size'] > 64.5 or disk['size'] == -1:
+            if    (disk['size'] < 3.5 or
+                   disk['size'] > 16.5 or
+                   disk['size'] == -1 or
+                   media_type.startswith('Fixed')):
                 debugger('Ignoring {}'.format(disk))
             else:
                 debugger('Listing {}'.format(disk))
@@ -104,11 +113,15 @@ def prepare_disk(disk_id, report_ui):
     for writing with dd and getting passed denial of access.
     '''
 
-    report_ui('closing all Explorer windows')
-    close_all_explorer_windows()
+    try:
+        report_ui('closing all Explorer windows')
+        close_all_explorer_windows()
 
-    report_ui('formatting the disk')
-    format_disk(disk_id)
+        report_ui('formatting the disk')
+        format_disk(disk_id)
+
+    except disk_error as e:
+        return e.args[0]
 
     # hopefully, the disk should be 'enabled' at this point and
     # dd should have no trouble to write the OS to Partition0
@@ -129,7 +142,7 @@ def format_disk(disk_id):
 
     # extract the id of the physical disk, required by diskpart
     # e.g. \\?\Device\Harddisk[id]\Partition0
-    id = int(disk_id.split("Harddisk")[1][0])  # access by string index alone is dangerous!
+    id = int(disk_id['id_num'])  # access by string index alone is dangerous!
 
     # create a diskpart script to format the given disk
     diskpart_format_script = 'select disk {} \nclean'.format(id)
@@ -145,6 +158,7 @@ def format_disk(disk_id):
         debugger('Formatted disk {} with diskpart'.format(id))
     else:
         debugger('[ERROR] ' + error.strip('\n'))
+        raise disk_error(FORMAT_ERROR)
 
 
 def eject_disk(disk_id):

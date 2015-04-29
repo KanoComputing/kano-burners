@@ -2,7 +2,7 @@
 
 # build.py
 #
-# Copyright (C) 2014 Kano Computing Ltd.
+# Copyright (C) 2014,2015 Kano Computing Ltd.
 # License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
 #
 #
@@ -65,6 +65,7 @@ def compile_resources():
 
     resources += extra_datas(os.path.join(os.getcwd(), '..', '..', 'res'))
     resources += extra_datas(os.path.join(os.getcwd(), '..', '..', 'win'))
+    resources += extra_datas(os.path.join(os.getcwd(), '..', '..', 'osx'))
     resources += extra_datas(os.path.join(os.getcwd(), '..', '..', 'DISCLAIMER'))
 
     return resources
@@ -124,7 +125,8 @@ for index in range(0, len(spec_lines)):
     # modify the path to the project - because we generated the file in build/[platform]
     if 'pathex' in spec_lines[index]:
         # go up two levels to fix the path
-        correct_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+        correct_path = os.path.dirname(os.path.dirname(os.getcwd()))
+        print correct_path
         line_parts = spec_lines[index].split("'")
         line_parts[1] = correct_path
         spec_lines[index] = "'".join(line_parts)

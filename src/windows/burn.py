@@ -2,7 +2,7 @@
 
 # burn.py
 #
-# Copyright (C) 2014 Kano Computing Ltd.
+# Copyright (C) 2014,2015 Kano Computing Ltd.
 # License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
 #
 #
@@ -71,7 +71,7 @@ def unzip_kano_os(os_path, dest_path):
 
 
 def burn_kano_os(os_path, disk, size, report_progress_ui):
-    cmd = '"{}\\dd.exe" if="{}" of="{}" bs=4M --progress'.format(_dd_path, os_path, disk)
+    cmd = '"{}\\dd.exe" if="{}" of="{}" bs=4M --progress'.format(_dd_path, os_path, disk['id_str'])
     # all handles (in, out, err) need to be set due to PyInstaller bundling
     process = subprocess.Popen(cmd, shell=True, universal_newlines=True,
                                stdin=subprocess.PIPE, stdout=subprocess.PIPE,

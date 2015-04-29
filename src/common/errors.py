@@ -31,6 +31,10 @@ DOWNLOAD_ERROR = {
     'title': 'There was an error downloading Kano OS..',
     'description': 'Please check your internet connection or try again later'
 }
+OLDBURNER_ERROR = {
+    'title': 'This version of the Kano Burner is too old',
+    'description': 'Please download a new version from help.kano.me.'
+}
 SERVER_DOWN_ERROR = {
     'title': 'Our servers seem to be down.. :(',
     'description': 'We apologise for the inconvenience. Please try again later.'

@@ -2,7 +2,7 @@
 
 # disk.py
 #
-# Copyright (C) 2014 Kano Computing Ltd.
+# Copyright (C) 2014,2015 Kano Computing Ltd.
 # License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
 #
 #
@@ -58,7 +58,7 @@ def get_disks_list():
         }
 
         # make sure we do not list any potential hard drive or too small SD card
-        if disk['size'] < 3.5 or disk['size'] > 64:  # GB
+        if disk['size'] < 3.5 or disk['size'] > 16.5:  # GB
             debugger('Ignoring {}'.format(disk))
         else:
             debugger('Listing {}'.format(disk))

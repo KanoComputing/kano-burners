@@ -2,17 +2,17 @@
 
 # download.py
 #
-# Copyright (C) 2014 Kano Computing Ltd.
+# Copyright (C) 2014,2015 Kano Computing Ltd.
 # License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
 #
 #
 # Downloading Kano OS module
 #
-# The module uses PySmartDL to download the OS image file and
+# The module uses aria2 or PySmartDL to download the OS image file and
 # urllib2 to get the information about the latest OS release.
 #
 # The downloading process is also required to report it's progress
-# back to the UI, therefore we run PySmartDL as a child process
+# back to the UI, therefore we run  a child process
 # and sit in a polling loop while it is running.
 #
 # We will also notify the UI of any errors that might have occured.
@@ -24,8 +24,10 @@ import urllib2
 import traceback
 
 from src.common.pySmartDL.pySmartDL import SmartDL, HashFailedException
+from src.common.aria2_downloader import Downloader as AriaDownloader
 from src.common.utils import debugger, LATEST_OS_INFO_URL, BYTES_IN_MEGABYTE
-from src.common.errors import DOWNLOAD_ERROR, MD5_ERROR
+from src.common.utils import BURNER_VERSION
+from src.common.errors import DOWNLOAD_ERROR, MD5_ERROR, OLDBURNER_ERROR
 from src.common.paths import temp_path
 
 
@@ -51,7 +53,7 @@ class Downloader(SmartDL):
         return not self._killed and SmartDL.isFinished(self)
 
 
-def download_kano_os(report_progress_ui):
+def download_kano_os(report_progress_ui, get_downloader):
     '''
     This method is used by the backendThread to download Kano OS.
 
@@ -68,10 +70,15 @@ def download_kano_os(report_progress_ui):
     if not os_info:
         return None, DOWNLOAD_ERROR
 
+    # Don't continue if this version of the burner is out of date
+    if 'min_burner_version' in os_info:
+        if os_info['min_burner_version'] > BURNER_VERSION:
+            return None, OLDBURNER_ERROR
+
     # the documentation is misleading - if non blocking mode is used,
     # pySmartDL may still throw exceptions
     try:
-        downloader = Downloader(os_info['url'], dest=temp_path, progress_bar=False)
+        downloader = get_downloader(os_info['url'], dest=temp_path, progress_bar=False)
         # simply make sure the file was not corrupted - not for cryptographic security
         downloader.add_hash_verification('md5', os_info['compressed_md5'])
         downloader.start(blocking=False)
@@ -102,6 +109,7 @@ def download_kano_os(report_progress_ui):
 
     else:
         # look through the errors that occured and report an MD5 error
+        debugger('FAILED, looking for errors')
         for error in downloader.get_errors():
             if isinstance(error, HashFailedException):
                 debugger('[ERROR] MD5 verification failed')
@@ -133,6 +141,11 @@ def get_latest_os_info():
             base_url=latest_json['base_url'],
             filename=latest_json['filename'])
 
+        # aria2 supports more url types, allow option to use these without failing
+        # backward compatibility with older burners
+        if 'url.v2' in latest_json:
+            latest_json['url'] = latest_json['url.v2']
+
         debugger('Latest Kano OS image json is {}'.format(latest_image_json))
         response = urllib2.urlopen(latest_image_json)
         os_json = json.load(response)
@@ -151,6 +164,6 @@ def get_latest_os_info():
 
 def get_required_mb():
     os_info = get_latest_os_info()
-    required_bytes = os_info['compressed_size'] + os_info['uncompressed_size']
+    required_bytes = os_info['compressed_size'] + os_info['uncompressed_size'] + BYTES_IN_MEGABYTE * 50
 
     return required_bytes / BYTES_IN_MEGABYTE

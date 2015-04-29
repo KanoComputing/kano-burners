@@ -2,7 +2,7 @@
 
 # utils.py
 #
-# Copyright (C) 2014 Kano Computing Ltd.
+# Copyright (C) 2014,2015 Kano Computing Ltd.
 # License: http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
 #
 #
@@ -20,6 +20,8 @@ import signal
 import subprocess
 from urllib2 import urlopen
 from PyQt4 import QtCore
+import platform
+import threading
 
 from src.common.paths import temp_path
 
@@ -29,30 +31,42 @@ from src.common.paths import temp_path
 BYTES_IN_MEGABYTE = 1000000
 BYTES_IN_GIGABYTE = 1000000000
 
+BURNER_VERSION = 2
+
+cmd_env = os.environ.copy().update(LC_ALL='C')
 
 # The URL used to download information about the lastest OS release
-#LATEST_OS_INFO_URL = 'http://dev.kano.me/temp/burner_test.json' 
-LATEST_OS_INFO_URL = 'http://downloads.kano.me/public/latest.json'
+LATEST_OS_INFO_URL=None
+if os.environ.has_key('KANO_BURNER_TEST_URL'):
+    LATEST_OS_INFO_URL= os.environ['KANO_BURNER_TEST_URL']
+else:
+    LATEST_OS_INFO_URL = 'http://downloads.kano.me/public/latest.json'
 
-#debf = open("/tmp/kano_burner_{}.log".format(os.getpid()),"w")
-
+debf=None
 def debugger(text):
+    global debf
     # if we are running from a PyInstaller bundle, print debug to file
     if getattr(sys, 'frozen', False):
         with open(os.path.join(temp_path, 'debug.txt'), "a") as debug_file:
             debug_file.write(text + '\n')
     # otherwise, print debug to stdout
     else:
-        print text
-
+        if debf is None:
+            if platform.system() == 'Darwin':
+                debf = open('/dev/tty','w')
+            else:
+                debf = sys.stdout
+        print >>debf, text
+        debf.flush()
 
 def run_cmd(cmd):
-    process = subprocess.Popen(cmd, shell=True,
+    process = subprocess.Popen(cmd, shell=True, env=cmd_env,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                preexec_fn=restore_signals)
 
     stdout, stderr = process.communicate()
     return_code = process.returncode
+    debugger('ran: [{}] {}'.format(cmd, return_code))
     return stdout, stderr, return_code
 
 
@@ -167,3 +181,15 @@ def calculate_eta(progress, total, speed):
         return '{} minutes, {} seconds'.format(minutes, seconds)
     else:
         return '{} seconds'.format(seconds)
+
+
+def dump_pipe(filehandle):
+    def dump_read(dump_file):
+        for line in dump_file:
+            pass
+
+    dump_thread = threading.Thread(target=dump_read,
+                                   args=(filehandle))
+    dump_thread.start()
+
+
