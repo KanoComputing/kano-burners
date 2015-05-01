@@ -52,6 +52,9 @@ class Downloader(SmartDL):
         # the default method now needs to also report whether it was killed or not
         return not self._killed and SmartDL.isFinished(self)
 
+    def close(self):
+        pass  # only needed for aria2
+
 
 def download_kano_os(report_progress_ui, get_downloader):
     '''
@@ -105,6 +108,7 @@ def download_kano_os(report_progress_ui, get_downloader):
     if downloader.isSuccessful():
         debugger('Downloading successfully finished and md5 check passed')
         report_progress_ui(100, 'download completed')
+        downloader.close()
         return os_info, None
 
     else:
@@ -114,6 +118,8 @@ def download_kano_os(report_progress_ui, get_downloader):
             if isinstance(error, HashFailedException):
                 debugger('[ERROR] MD5 verification failed')
                 return None, MD5_ERROR
+
+        downloader.close()
 
         # for any other errors, report a general message
         debugger('[ERROR] Downloading Kano image failed')
