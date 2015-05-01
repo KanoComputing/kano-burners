@@ -49,6 +49,7 @@ def debugger(text):
     if getattr(sys, 'frozen', False):
         with open(os.path.join(temp_path, 'debug.txt'), "a") as debug_file:
             debug_file.write(text + '\n')
+            debug_file.flush()
     # otherwise, print debug to stdout
     else:
         if debf is None:
@@ -112,16 +113,16 @@ def write_file_contents(data, path):
 
 
 def is_internet():
-    url_list = ['https://google.com',
-                'https://twitter.com',
-                'https://facebook.com',
-                'https://youtube.com']
+    url_list = ['http://google.com',
+                'http://twitter.com',
+                'http://facebook.com',
+                'http://youtube.com']
     for url in url_list:
         try:
             urlopen(url, timeout=1)
             return True
-        except:
-            pass
+        except Exception as e:
+            debugger('internet {}'.format(e))
     return False
 
 
