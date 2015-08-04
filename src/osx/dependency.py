@@ -118,14 +118,14 @@ def get_required_mb():
 
 
 def is_sufficient_space(required_mb):
-    cmd = "df %s | grep -v 'Available' | awk '{print $4}'" % temp_path
+    cmd = "df '%s' | grep -v 'Available' | awk '{print $4}'" % temp_path
     output, _, _ = run_cmd(cmd)
 
     try:
         free_space_mb = float(output.strip()) * 512 / BYTES_IN_MEGABYTE
     except:
         debugger('[ERROR] Failed parsing the line ' + output)
-        return True
+        return False
 
     debugger('Free space {0:.2f} MB in {1}'.format(free_space_mb, temp_path))
     return free_space_mb > required_mb
