@@ -15,7 +15,7 @@
 
 import os
 from PyQt4 import QtCore, QtGui
-from src.common.utils import load_css_for_widget, read_file_contents
+from src.common.utils import load_css_for_widget, read_file_contents, debugger
 from src.common.paths import images_path, css_path, base_path
 
 
@@ -291,6 +291,81 @@ class DisclaimerDialog(QtGui.QDialog):
     def accepted(self):
         '''
         This method is used by the BurnerGUI when the user clicks BURN!
+
+        We popup the dialog, wait for the user to click one of the buttons,
+        and return whether the user accepted the disclaimer.
+        '''
+
+        response = self.exec_()
+        return response == QtGui.QDialog.Accepted
+
+
+class LogReportDialog(QtGui.QDialog):
+    '''
+    This is a custom popup dialog which contains a title, textedit,
+    a checkbox, and two buttons to accept or cancel.
+
+    We show a disclaimer before starting the burning process, informing
+    the user again about the dangers of overwriting disks.
+    '''
+
+    def __init__(self, parent, logtext):
+        super(LogReportDialog, self).__init__(parent)
+
+        self.log = logtext
+
+        palette = self.palette()
+        palette.setColor(self.backgroundRole(), QtGui.QColor(255, 255, 255))
+        self.setPalette(palette)
+
+        self.setWindowTitle("Sorry we didn't get to finish burning your SD card")
+        heading = QtGui.QLabel("Want to send us the logs to allow us to improve?")
+        heading.setObjectName("dialogTitle")
+        load_css_for_widget(heading, os.path.join(css_path, 'label.css'))
+
+        textview = self.addTextEdit()
+
+        self.okButton = QtGui.QPushButton("OK")
+        self.okButton.clicked.connect(self.accept)
+        self.okButton.setObjectName("dialogOk")
+        load_css_for_widget(self.okButton, os.path.join(css_path, 'button.css'))
+
+        cancelButton = QtGui.QPushButton("CANCEL")
+        cancelButton.clicked.connect(self.reject)
+        cancelButton.setObjectName("dialogCancel")
+        load_css_for_widget(cancelButton, os.path.join(css_path, 'button.css'))
+
+        mainLayout = QtGui.QVBoxLayout()
+        hbox = QtGui.QHBoxLayout()
+        hbox.addSpacing(80)
+        hbox.addWidget(self.okButton)
+        hbox.addSpacing(20)
+        hbox.addWidget(cancelButton)
+        hbox.addSpacing(80)
+
+        mainLayout.setSpacing(20)
+        mainLayout.addWidget(heading)
+        mainLayout.addWidget(textview)
+        mainLayout.addLayout(hbox)
+
+        self.setLayout(mainLayout)
+
+
+    def addTextEdit(self):
+        textEdit = QtGui.QTextEdit()
+        load_css_for_widget(textEdit, os.path.join(css_path, 'textedit.css'))
+
+        text = self.log
+
+        textEdit.setText(text)
+        textEdit.setReadOnly(True)
+        textEdit.setGeometry(100, 100, 800, 600)
+
+        return textEdit
+
+    def accepted(self):
+        '''
+        This method is used by the BurnerGUI when the user quits the app.
 
         We popup the dialog, wait for the user to click one of the buttons,
         and return whether the user accepted the disclaimer.

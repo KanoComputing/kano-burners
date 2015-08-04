@@ -38,9 +38,9 @@ if __name__ == '__main__' and __package__ is None:
 
 from PyQt4 import QtGui, QtCore
 from src.common.ui import UI
-from src.common.widgets import DisclaimerDialog
+from src.common.widgets import DisclaimerDialog, LogReportDialog
 from src.common.download import download_kano_os
-from src.common.utils import delete_dir, debugger
+from src.common.utils import delete_dir, debugger, get_log, submit_log
 from src.common.errors import NO_DISKS_ERROR
 from src.common.paths import temp_path
 
@@ -166,6 +166,7 @@ class BurnerGUI(UI):
     # @Override
     # This method is called when the TRY AGAIN button is clicked
     def onRetryClick(self):
+        self.success = False # The user might have succeeded once but another burn has clearly not worked
         self.disksComboBox.restore()
         self.progressBar.reset()
         self.startButton.setEnabled(False)
@@ -175,11 +176,26 @@ class BurnerGUI(UI):
     # @Override
     # This method is called when the FINISH! button is clicked
     def onFinishClick(self):
+        self.success = True
         self.close()
 
     # @Override
     # This method is called when the application is closing
     def onFinish(self):
+        if not self.success:
+            log = get_log()
+            if log is not None:
+                print "App closed without a burn, offering the chance to send logs"
+                # launch disclaimer dialog - the accepted() method returns
+                # when the user clicks one of the buttons in the dialog
+                logReport = LogReportDialog(self, log)
+                if not logReport.accepted():
+                    debugger('logReport was canceled')
+                else:
+                    debugger("submitting")
+                    submit_log(log, "noreply@kano.me")
+                    debugger("Submitted")
+
         debugger('Removing temp files')
         delete_dir(temp_path)  # only useful when running from source
 
@@ -288,8 +304,25 @@ class BurnerBackendThread(QtCore.QThread):
         self.showStage("Kano OS has successfully been burned. Let's go!")
         self.showFinish({'success': True, 'title': final_message, 'description': "Kano OS has successfully been burned. Let's go!"})
 
+def log_excepthook(exc_class, exc_value, tb):
+    import traceback
+
+    tb_txt = ''.join(traceback.format_tb(tb))
+    try:
+        (filename, number, function, line_text) = traceback.extract_tb(tb)[-1]
+        exc_txt = "{} line {} function {} [{}]".format(
+            filename, number, function, line_text)
+    except:
+        exc_txt = ""
+
+    debugger("Unhandled exception")
+    debugger("Unhandled exception '{}' at {} {}".format(exc_value, exc_txt, tb_txt))
+    sys.__excepthook__(exc_class, exc_value, tb)
+
 
 def main():
+    sys.excepthook = log_excepthook
+    
     # start the UI event handling loop
     app = QtGui.QApplication(sys.argv)
     burnerUI = BurnerGUI()

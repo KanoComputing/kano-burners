@@ -18,6 +18,7 @@ import sys
 import shutil
 import signal
 import subprocess
+from urllib import urlencode
 from urllib2 import urlopen
 from PyQt4 import QtCore
 import platform
@@ -33,6 +34,9 @@ BYTES_IN_GIGABYTE = 1000000000
 
 BURNER_VERSION = 2
 
+# Path for submitting feedback
+FEEDBACK_URL = "http://api.kano.me/feedback"
+
 cmd_env = os.environ.copy().update(LC_ALL='C')
 
 # The URL used to download information about the lastest OS release
@@ -42,24 +46,55 @@ if os.environ.has_key('KANO_BURNER_TEST_URL'):
 else:
     LATEST_OS_INFO_URL = 'http://downloads.kano.me/public/latest.json'
 
-debf=None
+deb_path = None
+logfile = False
+# if we are running from a PyInstaller bundle, print debug to file
+if getattr(sys, 'frozen', False) or os.environ.has_key("KANO_BURNER_TEST_LOG"):
+    deb_path = os.path.join(temp_path, 'debug.txt')
+    logfile = True
+else:
+    if deb_path is None:
+        if platform.system() == 'Darwin':
+            deb_path='/dev/tty'
+
 def debugger(text):
-    global debf
-    # if we are running from a PyInstaller bundle, print debug to file
-    if getattr(sys, 'frozen', False):
-        with open(os.path.join(temp_path, 'debug.txt'), "a") as debug_file:
+    global deb_path
+    if deb_path is not None:
+        with open(deb_path, "a") as debug_file:
             debug_file.write(text + '\n')
             debug_file.flush()
-    # otherwise, print debug to stdout
     else:
-        if debf is None:
-            if platform.system() == 'Darwin':
-                debf = open('/dev/tty','w')
-            else:
-                debf = sys.stdout
-        print >>debf, text
-        debf.flush()
+        print text
+        sys.stdout.flush()
 
+
+def get_log():
+    global logfile, deb_path
+    if not logfile:
+        # No log file, can't submit errors
+        return None
+    try:        
+        return read_file_contents(deb_path)
+    except:
+        return None
+
+
+def submit_log(log, email):
+
+    payload = {
+        "text": log,
+        "email": email,
+        "username": "NotApplicable",
+        "category": "Burner",
+        "subject": "Burner failure in version {} on {}".format(BURNER_VERSION, platform.version())
+    }
+    data = urlencode(payload)
+    debugger("URL: "+FEEDBACK_URL+data)
+    #content = urlopen(url=FEEDBACK_URL, data=data).read()
+    debugger(content)
+
+
+        
 def run_cmd(cmd):
     process = subprocess.Popen(cmd, shell=True, env=cmd_env,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
