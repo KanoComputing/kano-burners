@@ -90,7 +90,7 @@ def submit_log(log, email):
     }
     data = urlencode(payload)
     debugger("URL: "+FEEDBACK_URL+data)
-    #content = urlopen(url=FEEDBACK_URL, data=data).read()
+    content = urlopen(url=FEEDBACK_URL, data=data).read()
     debugger(content)
 
 
