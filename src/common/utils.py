@@ -32,7 +32,7 @@ from src.common.paths import temp_path
 BYTES_IN_MEGABYTE = 1000000
 BYTES_IN_GIGABYTE = 1000000000
 
-BURNER_VERSION = 2
+BURNER_VERSION = 3
 
 # Path for submitting feedback
 FEEDBACK_URL = "http://api.kano.me/feedback"
