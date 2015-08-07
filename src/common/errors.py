@@ -17,7 +17,7 @@ INTERNET_ERROR = {
 }
 FREE_SPACE_ERROR = {
     'title': 'Insufficient available space..',
-    'description': 'Please ensure you have at least 600 MB available space locally'
+    'description': 'Please ensure you have at least 4.5 GB available space locally'
 }
 TOOLS_ERROR = {
     'title': 'Missing some tools..',
