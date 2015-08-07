@@ -33,7 +33,9 @@ def request_admin_privileges():
     '""".format(os.path.abspath(sys.argv[0]).replace(' ', '\\\\ '))
 
     if os.getuid() != 0:
-        os.system("""osascript -e {}""".format(ask_sudo_osascript))
+        cmd = """osascript -e {}""".format(ask_sudo_osascript)
+        print cmd
+        os.system(cmd)
         sys.exit(0)
 
 
