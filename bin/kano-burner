@@ -193,7 +193,11 @@ class BurnerGUI(UI):
                     debugger('logReport was canceled')
                 else:
                     debugger("submitting")
-                    submit_log(log, "noreply@kano.me")
+                    addr = logReport.getEmail()
+                    if not addr:
+                        addr = "noreply@kano.me"
+                    debugger("Email: "+addr)
+                    submit_log(log, addr)
                     debugger("Submitted")
 
         debugger('Removing temp files')

@@ -323,7 +323,17 @@ class LogReportDialog(QtGui.QDialog):
         heading.setObjectName("dialogTitle")
         load_css_for_widget(heading, os.path.join(css_path, 'label.css'))
 
-        textview = self.addTextEdit()
+        self.emailMessage = "Optionally enter email address"
+
+        emailentry = self.addTextEdit(text=self.emailMessage, readOnly=False, oneLine=True)
+        textview = self.addTextEdit(self.log, startsVisible=False)
+        self.textview = textview
+        self.emailentry = emailentry
+
+        self.logButton = QtGui.QPushButton("View Log")
+        self.logButton.clicked.connect(self.toggleLog)
+        self.logButton.setObjectName("dialogOk")
+        load_css_for_widget(self.logButton, os.path.join(css_path, 'button.css'))
 
         self.okButton = QtGui.QPushButton("OK")
         self.okButton.clicked.connect(self.accept)
@@ -337,6 +347,8 @@ class LogReportDialog(QtGui.QDialog):
 
         mainLayout = QtGui.QVBoxLayout()
         hbox = QtGui.QHBoxLayout()
+        hbox.addSpacing(20)
+        hbox.addWidget(self.logButton)
         hbox.addSpacing(80)
         hbox.addWidget(self.okButton)
         hbox.addSpacing(20)
@@ -345,21 +357,35 @@ class LogReportDialog(QtGui.QDialog):
 
         mainLayout.setSpacing(20)
         mainLayout.addWidget(heading)
+        mainLayout.addWidget(emailentry)
         mainLayout.addWidget(textview)
         mainLayout.addLayout(hbox)
 
+
         self.setLayout(mainLayout)
+        cancelButton.setFocus()
 
+    def toggleLog(self):
+        self.textview.setVisible(not self.textview.isVisible())
 
-    def addTextEdit(self):
-        textEdit = QtGui.QTextEdit()
+    def getEmail(self):
+        return self.emailentry.text()
+
+    def addTextEdit(self, text, readOnly=True, startsVisible=True, oneLine=False):
+        if oneLine:
+            textEdit = QtGui.QLineEdit()
+        else:
+            textEdit = QtGui.QTextEdit()
         load_css_for_widget(textEdit, os.path.join(css_path, 'textedit.css'))
 
-        text = self.log
+        if readOnly:
+            textEdit.setText(text)
+        else:
+            textEdit.setPlaceholderText(text)
 
-        textEdit.setText(text)
-        textEdit.setReadOnly(True)
+        textEdit.setReadOnly(readOnly)
         textEdit.setGeometry(100, 100, 800, 600)
+        textEdit.setVisible(startsVisible)
 
         return textEdit
 
