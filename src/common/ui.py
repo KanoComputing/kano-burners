@@ -54,6 +54,7 @@ class UI(QtGui.QWidget):
 
     def __init__(self):
         super(UI, self).__init__()
+        self.success = False # To allow the chance to offer feedback if the burn fails
         self.initUI()
 
     def initUI(self):

@@ -74,8 +74,8 @@ def burn_kano_os(path, disk, size, return_queue, report_progress_ui):
     failed = False
     unparsed_line = ''
     try:
-        gzip_cmd = 'gzip -dc {}'.format(path)
-        dd_cmd = 'dd of={} bs=4m'.format(disk)
+        gzip_cmd = "gzip -dc '{}'".format(path)
+        dd_cmd = "dd 'of={}' bs=4m".format(disk)
         gzip_process = subprocess.Popen(gzip_cmd,
                                         env=cmd_env,
                                         stderr=subprocess.PIPE,
