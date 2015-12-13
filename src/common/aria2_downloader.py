@@ -64,7 +64,9 @@ class Downloader:
         if self.hash_type:
             checksum_opts = ['-V']
             checksum_opt = '{}={}'.format(self.hash_type, self.hash_value)
-        port = 5900
+
+        port = self.find_available_port()
+
         l1 = [
             _aria2_path,
             '-d', self.dest,
@@ -105,6 +107,15 @@ class Downloader:
                 debugger('addUri failed {}'.format(e))
                 self.failed = True
                 self.failure = e
+
+    def find_available_port(self):
+        import socket
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.bind(("", 0))
+        s.listen(1)
+        port = s.getsockname()[1]
+        s.close()
+        return port
 
     def getAriaStatus(self):
         self.process.poll()
